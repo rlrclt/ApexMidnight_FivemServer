@@ -72,7 +72,7 @@ function updateMainUITexts() {
     if (respawnBtn) respawnBtn.innerHTML = '<i class="fa-solid fa-hospital"></i> เกิด (โรงพยาบาล) <span class="hintSmall">(R)</span>';
     if (respawnHereBtn) respawnHereBtn.innerHTML = '<i class="fa-solid fa-street-view"></i> เกิดตำแหน่งเดิม <span class="hintSmall">(G)</span>';
     if (bumpCorpseBtn && bumpCooldownRemaining <= 0) {
-        bumpCorpseBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> เด้งศพ <span class="hintSmall">(B)</span>';
+        bumpCorpseBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> เด้งศพ <span class="hintSmall">(X)</span>';
     }
 }
 
@@ -274,6 +274,7 @@ window.addEventListener('message', (event) => {
         startBlinking(data && data.blink);
         called.style.display = 'none';
         if (respawnBtn) { respawnBtn.disabled = true; respawnBtn.classList.remove('enabled'); }
+        if (respawnHereBtn) { respawnHereBtn.disabled = true; respawnHereBtn.classList.remove('enabled'); }
         if (!allowEarly) {
             if (early) early.style.display = 'none';
             if (centerEarlyValue) centerEarlyValue.style.display = 'none';
@@ -310,6 +311,11 @@ window.addEventListener('message', (event) => {
             respawnBtn.disabled = !canRespawn;
             respawnBtn.classList.toggle('enabled', canRespawn);
         }
+        if (respawnHereBtn) {
+            respawnHereBtn.disabled = !canRespawn;
+            respawnHereBtn.classList.toggle('enabled', canRespawn);
+        }
+        postNui('syncRespawnState', { canRespawn: canRespawn, remainEarly: data.remainEarly || 0 });
     } else if (data.action === 'called') {
         called.style.display = '';
     } else if (data.action === 'bumpTriggered') {
@@ -325,7 +331,7 @@ window.addEventListener('message', (event) => {
                 clearInterval(bumpCooldownTimer);
                 if (bumpCorpseBtn) {
                     bumpCorpseBtn.classList.remove('cooldown');
-                    bumpCorpseBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> เด้งศพ <span class="hintSmall">(B)</span>';
+                    bumpCorpseBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> เด้งศพ <span class="hintSmall">(X)</span>';
                 }
             } else if (bumpCorpseBtn) {
                 bumpCorpseBtn.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin"></i> เด้งศพ (${bumpCooldownRemaining}s)`;
@@ -367,7 +373,7 @@ function triggerBumpCorpse() {
             clearInterval(bumpCooldownTimer);
             if (bumpCorpseBtn) {
                 bumpCorpseBtn.classList.remove('cooldown');
-                bumpCorpseBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> เด้งศพ <span class="hintSmall">(B)</span>';
+                bumpCorpseBtn.innerHTML = '<i class="fa-solid fa-arrows-rotate"></i> เด้งศพ <span class="hintSmall">(X)</span>';
             }
         } else if (bumpCorpseBtn) {
             bumpCorpseBtn.innerHTML = `<i class="fa-solid fa-arrows-rotate fa-spin"></i> เด้งศพ (${bumpCooldownRemaining}s)`;
@@ -386,13 +392,17 @@ if (respawnBtn) {
     });
 }
 if (respawnHereBtn) {
-    respawnHereBtn.addEventListener('click', () => postNui('respawnHere'));
+    respawnHereBtn.addEventListener('click', () => {
+        if (!respawnHereBtn.disabled) {
+            postNui('respawnHere');
+        }
+    });
 }
 if (bumpCorpseBtn) {
     bumpCorpseBtn.addEventListener('click', triggerBumpCorpse);
 }
 
-// Global Keyboard Shortcut Handlers (E, R, G, B) while unconscious
+// Global Keyboard Shortcut Handlers (E, R, G, X) while unconscious
 window.addEventListener('keydown', (e) => {
     if (overlay.classList.contains('hidden')) return;
     const key = e.key ? e.key.toUpperCase() : '';
@@ -403,8 +413,10 @@ window.addEventListener('keydown', (e) => {
             postNui('respawn');
         }
     } else if (key === 'G') {
-        if (respawnHereBtn) postNui('respawnHere');
-    } else if (key === 'B') {
+        if (respawnHereBtn && !respawnHereBtn.disabled) {
+            postNui('respawnHere');
+        }
+    } else if (key === 'X') {
         triggerBumpCorpse();
     }
 });

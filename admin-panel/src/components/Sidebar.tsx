@@ -45,7 +45,8 @@ export function Sidebar({ currentRole, username, onRoleSwitch }: SidebarProps) {
     { name: "การแบน (Bans)", href: "/tables/bans", icon: ShieldAlert },
     { name: "บัญชีสังคม (Society Banking)", href: "/tables/bank_accounts_new", icon: Building2 },
     { name: "ประวัติการแก้ไข (Audit Logs)", href: "/audit-logs", icon: History },
-    { name: "จัดการแอดมิน (Admin Users)", href: "/admin-users", icon: UserCheck },
+    { name: "จัดการสิทธิ์แอดมิน (Admin Access)", href: "/admin-users", icon: UserCheck },
+    { name: "ตารางผู้ใช้แอดมิน (Admin Table)", href: "/tables/admin_users", icon: Database },
   ];
 
   return (
@@ -179,9 +180,29 @@ export function Sidebar({ currentRole, username, onRoleSwitch }: SidebarProps) {
           })}
         </div>
 
+        {/* txAdmin Direct Launcher */}
+        <div className="p-3 mx-4 mb-2 rounded-xl bg-card border border-border/80 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <div>
+              <div className="text-xs font-semibold text-foreground">txAdmin Control</div>
+              <div className="text-[10px] text-muted-foreground font-mono">Port :40120</div>
+            </div>
+          </div>
+          <a
+            href="http://192.168.2.35:40120"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="p-1.5 rounded-lg bg-secondary hover:bg-muted text-foreground transition-colors"
+            title="เปิดหน้า txAdmin"
+          >
+            <ChevronRight className="w-4 h-4" />
+          </a>
+        </div>
+
         {/* Footer info */}
         <div className="p-4 border-t border-border text-xs text-muted-foreground flex items-center justify-between">
-          <span>FiveM MySQL Live Connection</span>
+          <span>FiveM MySQL Live</span>
           <span className="font-mono text-[10px] text-emerald-500">● Connected</span>
         </div>
       </aside>

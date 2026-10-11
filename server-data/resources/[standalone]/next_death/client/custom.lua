@@ -2,11 +2,16 @@ local DEATH_STATE_STATE_BAG = 'qbx_medical:deathState'
 local lastBumpTime = 0
 local isBumping = false
 local cursorActive = false
+local canRespawnEarly = false
+local remainEarlyMs = 0
 
 -- ตรวจสอบว่าผู้เล่นอยู่ในสถานะตาย/หมดสติหรือไม่
 local function IsPlayerDownedOrDead()
     local deathState = LocalPlayer.state[DEATH_STATE_STATE_BAG] or 1
     if deathState == 2 or deathState == 3 then
+        return true
+    end
+    if LocalPlayer.state.isDead then
         return true
     end
     local ped = PlayerPedId()
@@ -18,32 +23,36 @@ end
 
 -- 1. ฟังก์ชันเกิดตำแหน่งเดิมที่ตาย (Respawn Here)
 local function DoRespawnHere()
-    local ped = PlayerPedId()
-    local coords = GetEntityCoords(ped)
-    local heading = GetEntityHeading(ped)
+    if not IsPlayerDownedOrDead() then return end
 
-    -- ปิด NUI ทันที
+    -- ตรวจสอบคูลดาวน์ก่อนอนุญาตให้เกิด
+    if not canRespawnEarly then
+        local secWait = math.max(1, math.ceil(remainEarlyMs / 1000))
+        if exports.qbx_core then
+            exports.qbx_core:Notify(('ยังไม่ถึงเวลาเกิด กรุณารออีก %d วินาที'):format(secWait), 'error', 3000)
+        end
+        return
+    end
+
+    -- ปิด NUI และ Vignette ทันที
     SendNUIMessage({ action = 'close' })
+    SendNUIMessage({ action = 'forceStopBlinking' })
     SetNuiFocus(false, false)
     cursorActive = false
 
-    -- ชุบชีวิตและฟื้นฟูตัวละคร
-    NetworkResurrectLocalPlayer(coords.x, coords.y, coords.z, heading, true, false)
-    ClearPedTasksImmediately(ped)
-    SetEntityHealth(ped, 200)
-    SetEntityMaxHealth(ped, 200)
-    ClearPedBloodDamage(ped)
-    SetEntityInvincible(ped, false)
-    ResetPedMovementClipset(ped, 0.0)
-
-    -- อัปเดตสถานะ qbx_medical ให้กลับเป็นปกติ (ALIVE = 1)
-    LocalPlayer.state:set(DEATH_STATE_STATE_BAG, 1, true)
-    LocalPlayer.state:set('isDead', false, true)
-    LocalPlayer.state.invBusy = false
-
-    -- ยิง event ฟื้นคืนชีพ
-    TriggerEvent('qbx_medical:client:playerRevived')
+    -- เรียก Server เพื่อใช้ระบบ Revive ทางการของ qbx_medical
+    -- ให้ qbx_medical เป็นตัวรีเซ็ตสถานะและส่ง event ชุบชีวิตอย่างสมบูรณ์
     TriggerServerEvent('next_death:server:respawnHere')
+
+    -- ปลดล็อก Ped tasks และ ragdoll เพื่อให้ตัวละครลุกขึ้นยืนได้อย่างเป็นธรรมชาติ
+    CreateThread(function()
+        Wait(150)
+        local ped = PlayerPedId()
+        ClearPedTasksImmediately(ped)
+        ClearPedSecondaryTask(ped)
+        SetPedToRagdoll(ped, 0, 0, 0, false, false, false)
+        ResetPedMovementClipset(ped, 0.0)
+    end)
 
     if exports.qbx_core then
         exports.qbx_core:Notify('ฟื้นคืนชีพตรงตำแหน่งเดิมเรียบร้อยแล้ว!', 'success', 4000)
@@ -51,16 +60,16 @@ local function DoRespawnHere()
 end
 
 -- 2. ฟังก์ชันเด้งศพ (Corpse Physics Bump & Area Resync)
+-- ใช้ได้เฉพาะตอนตาย/หมดสติเท่านั้น (HP <= 0 หรือ deathState 2/3)
 local function DoCorpseBump()
+    if not IsPlayerDownedOrDead() then return end
+    local pedCheck = PlayerPedId()
+    local hpCheck = GetEntityHealth(pedCheck)
+    local dsCheck = LocalPlayer.state[DEATH_STATE_STATE_BAG] or 1
+    if hpCheck > 0 and dsCheck == 1 and not LocalPlayer.state.isDead then return end
     if isBumping then return end
     local curTime = GetGameTimer()
-    if curTime - lastBumpTime < 5000 then
-        local secWait = math.ceil((5000 - (curTime - lastBumpTime)) / 1000)
-        if exports.qbx_core then
-            exports.qbx_core:Notify(('กรุณารออีก %d วินาที ก่อนเด้งศพอีกครั้ง'):format(secWait), 'error', 2000)
-        end
-        return
-    end
+    if curTime - lastBumpTime < 5000 then return end
 
     lastBumpTime = curTime
     isBumping = true
@@ -112,7 +121,8 @@ local function ToggleCursor()
     cursorActive = not cursorActive
     SetNuiFocus(cursorActive, cursorActive)
     if exports.qbx_core then
-        exports.qbx_core:Notify(cursorActive ? 'เปิดเมาส์ (คลิกปุ่มบนหน้าจอได้แล้ว)' : 'ปิดเมาส์ (ควบคุมมุมกล้อง)', 'inform', 1500)
+        local msg = cursorActive and 'เปิดเมาส์ (คลิกปุ่มบนหน้าจอได้แล้ว)' or 'ปิดเมาส์ (ควบคุมมุมกล้อง)'
+        exports.qbx_core:Notify(msg, 'inform', 1500)
     end
 end
 
@@ -123,10 +133,10 @@ RegisterCommand('respawnhere', DoRespawnHere, false)
 RegisterCommand('deathcursor', ToggleCursor, false)
 
 -- ลงทะเบียน Key Mapping สำหรับปุ่มคีย์บอร์ด
-RegisterKeyMapping('bumpcorpse', 'เด้งศพเมื่อนอนตาย', 'keyboard', 'B')
+RegisterKeyMapping('bumpcorpse', 'เด้งศพเมื่อนอนตาย', 'keyboard', 'X')
 RegisterKeyMapping('respawnhere', 'เกิดตำแหน่งเดิมเมื่อนอนตาย', 'keyboard', 'G')
 
--- Main Thread: ดักจับปุ่มกด B, G, E, R และคลิกขวาตลอดเวลาที่ผู้เล่นนอนตาย
+-- Main Thread: ดักจับปุ่มกด X, G, E, R และคลิกขวาตลอดเวลาที่ผู้เล่นนอนตาย
 CreateThread(function()
     while true do
         local sleep = 250
@@ -138,8 +148,8 @@ CreateThread(function()
             EnableControlAction(0, 2, true)   -- Look UD
             EnableControlAction(0, 245, true) -- Chat (T)
 
-            -- ปุ่ม B = เด้งศพ (INPUT_SPECIAL_ABILITY_SECONDARY / 29)
-            if IsDisabledControlJustPressed(0, 29) or IsControlJustPressed(0, 29) then
+            -- ปุ่ม X = เด้งศพ (INPUT_VEH_DUCK / 73)
+            if IsDisabledControlJustPressed(0, 73) or IsControlJustPressed(0, 73) then
                 DoCorpseBump()
             end
 
@@ -172,6 +182,12 @@ CreateThread(function()
 end)
 
 -- NUI Callbacks เมื่อคลิกจากหน้าจอ
+RegisterNUICallback('syncRespawnState', function(data, cb)
+    canRespawnEarly = data and data.canRespawn or false
+    remainEarlyMs = data and data.remainEarly or 0
+    cb('ok')
+end)
+
 RegisterNUICallback('respawnHere', function(_, cb)
     DoRespawnHere()
     cb('ok')

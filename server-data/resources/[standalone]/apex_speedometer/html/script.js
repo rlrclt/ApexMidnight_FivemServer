@@ -20,13 +20,15 @@ function updateScale(maxRpm) {
     if (maxRpm === lastMaxRpm) return;
     lastMaxRpm = maxRpm;
 
-    const maxK = Math.round(maxRpm / 1000);
+    const exactK = maxRpm / 1000;
+    const maxK = Math.floor(exactK);
     const step = maxK <= 6 ? 1 : (maxK <= 10 ? 2 : 3);
     let html = "<span>0</span>";
     for (let k = step; k < maxK; k += step) {
         html += `<span>${k}</span>`;
     }
-    html += `<span class="red">${maxK}K</span>`;
+    const redLabel = (exactK % 1 === 0) ? `${maxK}K` : `${exactK.toFixed(1)}K`;
+    html += `<span class="red">${redLabel}</span>`;
     rpmScale.innerHTML = html;
 }
 

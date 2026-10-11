@@ -149,6 +149,12 @@ Citizen.CreateThread(function()
 
                     Entity(veh).state:set("maxRpm", currentSpec.maxRpm, false)
                     Entity(veh).state:set("isManual", isManualMode, false)
+
+                    -- สลับเสียงเครื่องยนต์พันธุ์ซิ่ง (Engine Audio Swap) ถ้าใน Config กำหนดไว้
+                    if currentSpec.engineAudio and type(currentSpec.engineAudio) == "string" then
+                        ForceVehicleEngineAudio(veh, currentSpec.engineAudio)
+                    end
+
                     ApplyGearTorque(veh, 1, true)
                     SetVehicleCurrentGear(veh, 1)
                     SetVehicleNextGear(veh, 1)
@@ -372,8 +378,8 @@ Citizen.CreateThread(function()
                     -- รองรับทั้งใส่ตัวเลขเดียว (ทุกเกียร์) หรือใส่ตารางแยกรายเกียร์ { [1]=8500, [2]=8800 }
                     local upshiftRpm = (type(currentSpec.upshiftRpm) == "table" and currentSpec.upshiftRpm[controlledGear]) or (type(currentSpec.upshiftRpm) == "number" and currentSpec.upshiftRpm) or (currentSpec.maxRpm * 0.94)
                     local rawDownshift = (type(currentSpec.downshiftRpm) == "table" and currentSpec.downshiftRpm[controlledGear]) or (type(currentSpec.downshiftRpm) == "number" and currentSpec.downshiftRpm) or (currentSpec.idleRpm + (currentSpec.maxRpm - currentSpec.idleRpm) * 0.38)
-                    -- Hysteresis Guard: downshiftRpm ต้องต่ำกว่าจุดสับขึ้นเสมอ (ไม่เกิน 65% ของ upshift) ป้องกันเกียร์เด้งวนลูป
-                    local downshiftRpm = math.min(rawDownshift, upshiftRpm * 0.65)
+                    -- Hysteresis Guard: downshiftRpm ต้องต่ำกว่าจุดสับขึ้นเสมอ (ไม่เกิน 85% ของ upshift หรือห่างอย่างน้อย 400 RPM)
+                    local downshiftRpm = math.max(0, math.min(rawDownshift, math.min(math.max(0, upshiftRpm - 400), upshiftRpm * 0.85)))
 
                     -- Upshift: เมื่อรอบลากจนถึงจุดตัดรอบ (ต้องกดคันเร่งและไม่ได้เหยียบเบรก)
                     if simulatedRpm >= upshiftRpm and controlledGear < maxVehicleGears and speedKmh > 5.0 and isThrottle and not isBrakeOrReverse then

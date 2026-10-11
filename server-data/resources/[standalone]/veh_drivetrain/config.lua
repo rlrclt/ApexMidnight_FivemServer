@@ -4,8 +4,8 @@ Config = {}
 Config.DefaultMode = "AUTO" -- โหมดเริ่มต้นเมื่อขึ้นรถ ("AUTO" หรือ "MANUAL")
 Config.Keybinds = {
     toggleMode = "M",       -- ปุ่มสลับโหมด AUTO / MANUAL
-    shiftUp = "LSHIFT",     -- ปุ่มสับเกียร์ขึ้น (Shift Up)
-    shiftDown = "LCONTROL", -- ปุ่มสับเกียร์ลง (Shift Down)
+    shiftUp = "q",     -- ปุ่มสับเกียร์ขึ้น (Shift Up)
+    shiftDown = "e", -- ปุ่มสับเกียร์ลง (Shift Down)
 }
 
 -- Mechanical Transmission Specs
@@ -13,9 +13,10 @@ Config.Keybinds = {
 -- torqueMultipliers: ตัวคูณแรงบิดของแต่ละเกียร์เทียบกับ fInitialDriveForce ใน handling.meta
 local elegySpec = {
     name = "Elegy Retro / Sport Spec",
-    idleRpm = 1500,
-    idleSwing =2880,   -- ระยะรอบสวิง ±RPM (1200 ± 80 = 1120-1280)
-    idleHz = 6.5,     -- ความถี่การสวิง (Hz: รอบต่อวินาที)
+    engineAudio = "elegy2", -- เสียงเครื่องยนต์ RB26 / Boxer Twin-Turbo สายซิ่งลั่นๆ
+    idleRpm = 1200,
+    idleSwing = 85,          -- ระยะรอบสวิง ±RPM (1200 ± 85 = 1115-1285 RPM แคมซิ่งสไตล์ลูกคลื่น)
+    idleHz = 6.5,            -- ความถี่การสวิง (Hz: รอบต่อวินาที)
     maxRpm = 9000,
     lockGearSpeed = true, -- ล็อกความเร็วไม่ให้ทะลุเพดานเกียร์ (ยกเว้นเกียร์สุดท้ายที่ปล่อยให้ไหลตามแรงเครื่อง)
     upshiftRpm = {
@@ -23,14 +24,15 @@ local elegySpec = {
         [2] = 8200,   -- เกียร์ 2 สับขึ้นที่ 8200
         [3] = 8800,   -- เกียร์ 3
         [4] = 8700,   -- เกียร์ 4
-        [5] = 8900,   -- เกียร์ 5
+        [5] = 8500,   -- เกียร์ 5
+        [6] = 6500,   -- สับลง 5
     },
     downshiftRpm = {
-        [2] = 7200,   -- ยกคันเร่งไหลช้า รอบตกแตะ 3200 ค่อยสับลง 1
-        [3] = 7500,   -- สับลง 2
-        [4] = 7800,   -- สับลง 3
-        [5] = 7000,   -- สับลง 4
-        [6] = 7000,   -- สับลง 5
+        [2] = 6500,   -- ยกคันเร่งไหลช้า รอบตกแตะ 3200 ค่อยสับลง 1
+        [3] = 6500,   -- สับลง 2
+        [4] = 6500,   -- สับลง 3
+        [5] = 6500,   -- สับลง 4
+        [6] = 6500,   -- สับลง 5
     },
     engineBrakingInertia = 0.85, -- แรงเฉื่อยตอนยกคันเร่ง (0.50 = ตกไว, 0.85 = หน่วงนุ่มนวล)
     -- กำหนดความเร็วตัดเกียร์ได้ 2 แบบ (ถ้ามี gearMaxSpeeds จะใช้ก่อน):
@@ -40,7 +42,7 @@ local elegySpec = {
             [2] = 110, -- เกียร์ 2 ล็อกความเร็วที่ 110 กม./ชม.
             [3] = 149, -- เกียร์ 3 ล็อกความเร็วที่ 149 กม./ชม.
             [4] = 193, -- เกียร์ 4 ล็อกความเร็วที่ 187 กม./ชม.
-            [5] = 221, -- เกียร์ 5 ล็อกความเร็วที่ 221 กม./ชม.
+            [5] = 231, -- เกียร์ 5 ล็อกความเร็วที่ 221 กม./ชม.
             [6] = 252, -- เกียร์ 6 ล็อกความเร็วที่ 252 กม./ชม.
         },
     -- แบบที่ 2: gearRatios สัดส่วนเทียบกับ fInitialDriveMaxFlatVel ของ handling.meta
@@ -49,8 +51,8 @@ local elegySpec = {
           [2] = 0.66, -- สัดส่วนเกียร์ 2
           [3] = 0.82, -- สัดส่วนเกียร์ 3
           [4] = 0.99, -- สัดส่วนเกียร์ 4
-          [5] = 1.22, -- สัดส่วนเกียร์ 5
-          [6] = 1.55, -- สัดส่วนเกียร์ 6
+          [5] = 1.42, -- สัดส่วนเกียร์ 5
+          [6] = 1.75, -- สัดส่วนเกียร์ 6
       },
       -- กำหนดค่า fInitialDriveForce รายเกียร์โดยตรง
       gearDriveForce = {
@@ -66,8 +68,9 @@ local elegySpec = {
 -- Truffade Thrax (Bugatti Divo W16 7-Speed Dual-Clutch Spec)
 local thraxSpec = {
     name = "Truffade Thrax (Bugatti Divo W16 Spec)",
-    idleRpm = 1500,
-    idleSwing =1535,      -- เดินเบานิ่งละเอียดแบบ W16 สวิงเบาๆ ±35 RPM
+    engineAudio = "nero2",    -- เสียงเครื่อง W16 ไฮเปอร์คาร์ดุดันระดับตำนาน
+    idleRpm = 1000,
+    idleSwing = 35,           -- เดินเบานิ่งละเอียดแบบ W16 สวิงเบาๆ ±35 RPM (965-1035 RPM)
     idleHz = 5.0,
     maxRpm = 8000,    -- W16 Quad-Turbo Redline ~7,500 RPM
     lockGearSpeed = true,

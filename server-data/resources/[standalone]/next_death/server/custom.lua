@@ -11,8 +11,9 @@ RegisterNetEvent('next_death:server:respawnHere', function()
         pcall(function()
             exports.qbx_medical:Revive(src)
         end)
+    else
+        TriggerClientEvent('qbx_medical:client:playerRevived', src)
     end
-    TriggerClientEvent('qbx_medical:client:playerRevived', src)
 end)
 
 -- เกิดที่โรงพยาบาล (Respawn Hospital)
@@ -44,6 +45,23 @@ end)
 -- ซิงค์การเด้งศพไปยังผู้เล่นรอบข้าง
 RegisterNetEvent('next_death:server:syncCorpse', function(coords)
     local src = source
+    local pedCheck = GetPlayerPed(src)
+    local aliveHp = DoesEntityExist(pedCheck) and GetEntityHealth(pedCheck) > 0
+    local mdDead = false
+    local ok, player = pcall(function() return exports.qbx_core:GetPlayer(src) end)
+    if ok and player and player.PlayerData and player.PlayerData.metadata then
+        local md = player.PlayerData.metadata
+        mdDead = md.isdead or md.inlaststand
+    end
+    local stateDead = false
+    pcall(function()
+        local st = Player(src).state['qbx_medical:deathState']
+        if st == 2 or st == 3 then stateDead = true end
+        if Player(src).state.isDead then stateDead = true end
+    end)
+    if not mdDead and not stateDead and aliveHp then
+        return
+    end
     local ped = GetPlayerPed(src)
     local netId = NetworkGetNetworkIdFromEntity(ped)
     TriggerClientEvent('next_death:client:onCorpseBumped', -1, coords, netId)
