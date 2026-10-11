@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "find-skills": {
+      "source": "vercel-labs/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-skills/SKILL.md",
+      "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
+    },
+    "fivem-development": {
+      "source": "proelias7/fivem-skill",
+      "sourceType": "github",
+      "skillPath": "skills/fivem-development/SKILL.md",
+      "computedHash": "05ee48737477491b3e6b48c8255b9b5e5c2bcc009333621985a128a7bd6b28fc"
+    },
+    "qbox-framework": {
+      "source": "proelias7/fivem-skill",
+      "sourceType": "github",
+      "skillPath": "skills/qbox-framework/SKILL.md",
+      "computedHash": "3a1c2246ca4f8e3494a2a468a60edca40461eb8c3e66f38af951990b2c760dc3"
+    }
+  }
+}

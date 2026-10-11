@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexMidnight FiveM — Plugin Stack & Architecture</title>
+  <style>
+    :root {
+      --bg: #0b0f17;
+      --surface: #131926;
+      --surface-hover: #1c2436;
+      --surface-border: #263248;
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+      --text-dim: #94a3b8;
+      --accent: #38bdf8;
+      --accent-dim: rgba(56, 189, 248, 0.12);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --surface: #ffffff;
+        --surface-hover: #f1f5f9;
+        --surface-border: #e2e8f0;
+        --text-main: #0f172a;
+        --text-muted: #334155;
+        --text-dim: #64748b;
+        --accent: #0369a1;
+        --accent-dim: rgba(3, 105, 161, 0.1);
+      }
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Minimal Header */
+    header {
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--surface-border);
+      background: var(--surface);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--surface-hover);
+      border: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: var(--accent);
+    }
+    .brand-title {
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-main);
+    }
+    .brand-sub {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+    }
+
+    /* Actions & Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .search-box {
+      position: relative;
+    }
+    .search-box input {
+      background: var(--bg);
+      border: 1px solid var(--surface-border);
+      color: var(--text-main);
+      padding: 0.45rem 0.85rem 0.45rem 2rem;
+      border-radius: 8px;
+      font-size: 0.825rem;
+      width: 220px;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+    .search-box input:focus {
+      border-color: var(--accent);
+      width: 260px;
+    }
+    .search-icon {
+      position: absolute;
+      left: 0.65rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 0.75rem;
+    }
+
+    .view-switch {
+      display: flex;
+      background: var(--bg);
+      border: 1px solid var(--surface-border);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .view-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .view-btn:hover { color: var(--text-main); }
+    .view-btn.active {
+      background: var(--surface-hover);
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    /* Filter Bar */
+    .filter-strip {
+      padding: 0.65rem 2rem;
+      border-bottom: 1px solid var(--surface-border);
+      background: var(--surface);
+      display: flex;
+      gap: 0.4rem;
+      overflow-x: auto;
+      white-space: nowrap;
+    }
+    .pill {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 0.25rem 0.65rem;
+      border-radius: 6px;
+      font-size: 0.76rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .pill:hover { background: var(--surface-hover); color: var(--text-main); }
+    .pill.active {
+      background: var(--surface-hover);
+      border-color: var(--surface-border);
+      color: var(--text-main);
+      font-weight: 600;
+    }
+
+    main {
+      flex: 1;
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Mindmap Tree View (Minimal Tree) */
+    .tree-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 2.5rem;
+      position: relative;
+    }
+
+    .root-node {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      margin: 0 auto;
+    }
+    .root-tag {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #0369a1;
+      background: rgba(3, 105, 161, 0.12);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .root-tag {
+        color: #38bdf8;
+        background: rgba(56, 189, 248, 0.15);
+      }
+    }
+    .root-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .tree-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    /* Minimal Category Box */
+    .cat-box {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.2s ease;
+    }
+    .cat-box:hover {
+      border-color: #2e3547;
+    }
+
+    .cat-head {
+      padding: 0.9rem 1.1rem;
+      border-bottom: 1px solid var(--surface-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .cat-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .cat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .cat-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .cat-count {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+
+    .cat-items {
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      flex: 1;
+    }
+
+    /* Minimal Plugin Row */
+    .plugin-row {
+      padding: 0.65rem 0.75rem;
+      border-radius: 6px;
+      background: var(--bg);
+      border: 1px solid var(--surface-border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      transition: all 0.15s ease;
+    }
+    .plugin-row:hover {
+      background: var(--surface-hover);
+    }
+
+    .plugin-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+    .plugin-name {
+      font-family: var(--font-mono);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-main);
+    }
+    .plugin-badge {
+      font-size: 0.68rem;
+      color: var(--text-dim);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .plugin-desc {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Architecture Box */
+    .arch-code {
+      background: #08090d;
+      border: 1px solid #1a1e28;
+      border-radius: 6px;
+      padding: 0.75rem;
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #94a3b8;
+      line-height: 1.45;
+      overflow-x: auto;
+      margin-top: 0.4rem;
+    }
+
+    /* List View Table */
+    .list-view-table {
+      width: 100%;
+      border-collapse: collapse;
+      display: none;
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .list-view-table th, .list-view-table td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-size: 0.82rem;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .list-view-table th {
+      background: #0d0f17;
+      color: var(--text-dim);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .list-view-table tr:hover td {
+      background: var(--surface-hover);
+    }
+
+    footer {
+      padding: 1.5rem 2rem;
+      border-top: 1px solid var(--surface-border);
+      text-align: center;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: auto;
+      background: var(--surface);
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <div class="brand-logo">⚡</div>
+      <div>
+        <div class="brand-title">ApexMidnight FiveM Stack</div>
+        <div class="brand-sub">แผนผังระบบและสคริปต์ที่แนะนำ (Qbox + OX Ecosystem)</div>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="ค้นหา Script หรือโมดูล...">
+      </div>
+
+      <div class="view-switch">
+        <button class="view-btn active" data-view="grid" id="btnGrid">Grid View</button>
+        <button class="view-btn" data-view="table" id="btnTable">Table View</button>
+      </div>
+    </div>
+  </header>
+
+  <nav class="filter-strip" id="filterStrip">
+    <button class="pill active" data-cat="all">ทั้งหมด (All)</button>
+    <button class="pill" data-cat="infra">01 แกนกลาง</button>
+    <button class="pill" data-cat="police">02 ตำรวจ</button>
+    <button class="pill" data-cat="ems">03 การแพทย์</button>
+    <button class="pill" data-cat="mech">04 ช่าง / อู่</button>
+    <button class="pill" data-cat="admin">05 แอดมิน</button>
+    <button class="pill" data-cat="civ">06 พลเรือน & งาน</button>
+    <button class="pill" data-cat="db">07 ฐานข้อมูล & เน็ตเวิร์ก</button>
+  </nav>
+
+  <main>
+    <div class="tree-wrapper" id="gridContainer">
+      <div class="root-node">
+        <span class="root-tag">Core Architecture</span>
+        <span class="root-title">ApexMidnight Server Hub &bull; Qbox + ox_lib + MariaDB 11.8</span>
+      </div>
+
+      <div class="tree-grid" id="treeGrid">
+        <!-- Rendered by JavaScript -->
+      </div>
+    </div>
+
+    <!-- Table View -->
+    <table class="list-view-table" id="listViewTable">
+      <thead>
+        <tr>
+          <th style="width: 22%;">Script / Module</th>
+          <th style="width: 18%;">หมวดหมู่</th>
+          <th>หน้าที่และการทำงาน</th>
+          <th style="width: 12%;">ประเภท</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- Rendered by JavaScript -->
+      </tbody>
+    </table>
+  </main>
+
+  <footer>
+    ApexMidnight FiveM Architecture &bull; Clean Minimal Edition &bull; เอกสารอ้างอิง: Docs/RECOMMENDED_PLUGINS_STACK.md
+  </footer>
+
+  <script>
+    const DATA = [
+      {
+        id: "infra",
+        title: "01. ระบบแกนกลาง (Core)",
+        color: "#38bdf8",
+        items: [
+          { name: "oxmysql", desc: "เชื่อมต่อฐานข้อมูล MariaDB แบบ Asynchronous ไม่ดึง Game Thread", type: "Database Driver" },
+          { name: "ox_lib", desc: "ไลบรารีส่วนกลาง (UI Elements, Callbacks, Zone Triggers, Radial Menu)", type: "Core Library" },
+          { name: "ox_target", desc: "ระบบส่องเป้าหมาย (Eye Interaction) ชี้วัตถุ คน หรือรถ", type: "Interaction" },
+          { name: "ox_inventory", desc: "ระบบช่องเก็บของความปลอดภัยสูง ป้องกันบั๊กปั๊มของ/เสกของ 100%", type: "Inventory" },
+          { name: "qbx_core", desc: "ระบบจัดการผู้เล่น ตัวละคร (Multi-Character) สิทธิ์ ยศงาน และเศรษฐกิจ", type: "Framework" },
+          { name: "pma-voice", desc: "ระบบเสียงสมจริง 3D Spatial Audio ไมค์ วอวิทยุ และโทรศัพท์", type: "Voice / Radio" },
+          { name: "illenium-appearance", desc: "ระบบเสื้อผ้า หน้าผม รอยสัก และบันทึกชุดยูนิฟอร์มประจำหน่วยงาน", type: "Appearance" },
+          { name: "ox_doorlock", desc: "ระบบล็อกประตูอัตโนมัติ สำหรับสถานีตำรวจ โรงพยาบาล อู่ช่าง", type: "World Security" }
+        ]
+      },
+      {
+        id: "police",
+        title: "02. แผนกตำรวจ (Police)",
+        color: "#60a5fa",
+        items: [
+          { name: "qbx_policejob", desc: "ระบบงานตำรวจหลัก: เข้าเวร สวมกุญแจมือ คุมตัว เข้าห้องขัง ค้นตัว", type: "Job Core" },
+          { name: "ps-mdt / ox_mdt", desc: "คอมพิวเตอร์ประจำการ: ประวัติอาชญากร ข้อมูลรถ หมายจับ ใบสั่ง ค่าปรับ", type: "Police MDT" },
+          { name: "ox_evidence", desc: "ระบบตรวจพิสูจน์หลักฐาน: คราบเลือด ปลอกกระสุน ลายนิ้วมือ", type: "Forensics" },
+          { name: "ps-radar / wk_wars2x", desc: "เรดาร์ตรวจจับความเร็วหน้ารถตำรวจ ล็อคเป้าหมายยานพาหนะขับเร็ว", type: "Vehicle Radar" },
+          { name: "wasabi_carlock / qbx_vehiclekeys", desc: "สิทธิ์ปลดล็อกรถฉุกเฉินและระบบเบิกยานพาหนะหลวงประจำหน่วยงาน", type: "Vehicle Access" },
+          { name: "pma-voice Radio", desc: "ช่องสัญญาณวิทยุสื่อสารเฉพาะกลุ่มตำรวจ เข้ารหัสเฉพาะเจ้าหน้าที่", type: "Radio Network" }
+        ]
+      },
+      {
+        id: "ems",
+        title: "03. แผนกการแพทย์ (EMS)",
+        color: "#f472b6",
+        items: [
+          { name: "qbx_ambulancejob", desc: "ระบบหมอหลัก: ออนเวร ตรวจชีพจร ทำแผล ชุบชีวิต เบิกรถฉุกเฉิน", type: "Job Core" },
+          { name: "wasabi_ambulance", desc: "ระบบบาดเจ็บแยกชิ้นส่วน: แขนหัก ขาหัก เลือดไหลต่อเนื่อง ผ่าตัดบนเตียง", type: "Advanced Injury" },
+          { name: "qbx_medical / Beds", desc: "เตียงคนไข้นอนรักษาอัตโนมัติ (Check-in เมื่อไม่มีหมอออนไลน์)", type: "Hospital Bed" },
+          { name: "qbx_wheelchair", desc: "รถเข็นผู้ป่วย สำหรับเข็นเคลื่อนย้ายคนไข้ส่งแผนกฉุกเฉิน/ผ่าตัด", type: "Utility" },
+          { name: "ox_pharmacy", desc: "ตู้เบิกยาและเวชภัณฑ์ (ผ้าพันแผล ยาแก้ปวด เครื่องกระตุกหัวใจ)", type: "Medical Storage" }
+        ]
+      },
+      {
+        id: "mech",
+        title: "04. แผนกช่าง (Mechanic)",
+        color: "#fbbf24",
+        items: [
+          { name: "qbx_mechanicjob", desc: "งานช่างมาตรฐาน: ซ่อมเครื่องยนต์ ตัวถัง ล้างรถ ตรวจเช็คสภาพความเสียหาย", type: "Job Core" },
+          { name: "jim-mechanic", desc: "แต่งรถเชิงลึก: สลับอะไหล่แท้/เทียบ เปลี่ยนยาง ติดตั้งไนตรัส (NOS)", type: "Tuning & Mod" },
+          { name: "qbx_garages", desc: "ระบบอู่เก็บรถส่วนกลาง อู่เอกชน และการยึดรถเข้าของกลางอู่ช่าง", type: "Garages" },
+          { name: "ox_fuel / cdn-fuel", desc: "ระบบน้ำมันและถังน้ำมันพกพา ช่างนำไปเติมฉุกเฉินให้รถที่ดับกลางทางได้", type: "Fuel System" },
+          { name: "flatbed / tow script", desc: "ระบบรถยกรถสไลด์ ลากรถอุบัติเหตุและรถพังเข้าอู่เพื่อดำเนินการซ่อม", type: "Tow Utility" }
+        ]
+      },
+      {
+        id: "admin",
+        title: "05. ผู้ดูแลระบบ (Admin)",
+        color: "#f87171",
+        items: [
+          { name: "txAdmin", desc: "จัดการเครื่องแม่ข่าย รีสตาร์ทอัตโนมัติ ระบบแบนนอกเกม Live Console", type: "Server Manager" },
+          { name: "qbx_adminmenu", desc: "เมนูควบคุมในเกม: Spectate ส่องผู้เล่น วาร์ป ชุบชีวิต เสกของตรวจสอบ", type: "In-game Menu" },
+          { name: "ox_lib Logger", desc: "บันทึก Log กิจกรรมสำคัญเข้า Discord แยกห้อง (เงิน ไอเทม คิล แอดมิน)", type: "Discord Audit" },
+          { name: "screenshot-basic", desc: "ถ่ายภาพหน้าจอผู้เล่นต้องสงสัยแบบเรียลไทม์ส่งตรงเข้า Discord", type: "Anticheat Aid" }
+        ]
+      },
+      {
+        id: "civ",
+        title: "06. พลเรือน & เศรษฐกิจ",
+        color: "#34d399",
+        items: [
+          { name: "ox_hud / ps-hud", desc: "สถานะบนหน้าจอ: เลือด ความหิว น้ำ สตามินา ไมโครโฟน", type: "UI HUD" },
+          { name: "renewed-banking", desc: "ระบบธนาคาร บัญชีส่วนตัว บัญชีร่วมหน่วยงาน และประวัติการโอน", type: "Banking" },
+          { name: "yseries / lb-phone", desc: "สมาร์ตโฟน: โทรแจ้ง 911/912 โซเชียล ถ่ายรูป ระบบแชทส่วนตัว", type: "Smartphone" },
+          { name: "Civilian Jobs", desc: "งานสุจริต: งานส่งของ งานตกปลา งานขุดเหมือง งานตัดไม้", type: "Legal Job" },
+          { name: "Illegal Activities", desc: "งานสายเทา/งานดำ: ปล้นร้านสะดวกซื้อ ปล้นเซฟ ฟาร์มสารเสพติด", type: "Crime & Gang" }
+        ]
+      },
+      {
+        id: "db",
+        title: "07. ฐานข้อมูล & เน็ตเวิร์ก",
+        color: "#a78bfa",
+        items: [
+          { name: "MariaDB 11.8 (Unix Socket)", desc: "เชื่อมต่อผ่าน /run/mysqld/mysqld.sock ตัด TCP Latency ประหยัด RAM", type: "Database" },
+          { name: "Native Events & State Bags", desc: "ส่งข้อมูลในเกมผ่าน UDP/ENet (C++) ระดับ Microsecond ไม่หน่วงเซิร์ฟเวอร์", type: "Internal Sync" },
+          { name: "WebSocket (External Only)", desc: "ใช้เชื่อมต่อเฉพาะเว็บภายนอก เช่น Web CAD/MDT หรือ Live Map", type: "External API" }
+        ],
+        diagram: "[ FiveM Server / Lua Scripts ]\n       │\n       ▼ (Asynchronous non-blocking)\n   [ oxmysql ]\n       │\n       ▼ (Zero TCP Latency via Unix Socket)\n[ /run/mysqld/mysqld.sock ]\n       │\n       ▼\n[ MariaDB 11.8+ (utf8mb4_unicode_ci) ]"
+      }
+    ];
+
+    const treeGrid = document.getElementById('treeGrid');
+    const tableBody = document.getElementById('tableBody');
+    const searchInput = document.getElementById('searchInput');
+    const filterStrip = document.getElementById('filterStrip');
+    const btnGrid = document.getElementById('btnGrid');
+    const btnTable = document.getElementById('btnTable');
+    const gridContainer = document.getElementById('gridContainer');
+    const listViewTable = document.getElementById('listViewTable');
+
+    let currentFilter = 'all';
+    let searchQuery = '';
+
+    function render() {
+      // 1. Render Grid
+      treeGrid.innerHTML = '';
+      tableBody.innerHTML = '';
+
+      DATA.forEach(category => {
+        if (currentFilter !== 'all' && category.id !== currentFilter) return;
+
+        // Filter items by search
+        const matchedItems = category.items.filter(item => {
+          if (!searchQuery) return true;
+          return item.name.toLowerCase().includes(searchQuery) ||
+                 item.desc.toLowerCase().includes(searchQuery) ||
+                 item.type.toLowerCase().includes(searchQuery);
+        });
+
+        if (searchQuery && matchedItems.length === 0) return;
+
+        // Category Box for Grid
+        const catBox = document.createElement('div');
+        catBox.className = 'cat-box';
+
+        let itemsHtml = matchedItems.map(item => `
+          <div class="plugin-row">
+            <div class="plugin-top">
+              <span class="plugin-name">${escapeHtml(item.name)}</span>
+              <span class="plugin-badge">${escapeHtml(item.type)}</span>
+            </div>
+            <div class="plugin-desc">${escapeHtml(item.desc)}</div>
+          </div>
+        `).join('');
+
+        if (category.diagram && (!searchQuery || category.diagram.toLowerCase().includes(searchQuery))) {
+          itemsHtml += `<pre class="arch-code">${escapeHtml(category.diagram)}</pre>`;
+        }
+
+        catBox.innerHTML = `
+          <div class="cat-head">
+            <div class="cat-title-wrap">
+              <span class="cat-dot" style="background: ${category.color};"></span>
+              <span class="cat-name">${escapeHtml(category.title)}</span>
+            </div>
+            <span class="cat-count">${matchedItems.length} items</span>
+          </div>
+          <div class="cat-items">
+            ${itemsHtml}
+          </div>
+        `;
+        treeGrid.appendChild(catBox);
+
+        // Table Rows
+        matchedItems.forEach(item => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td><code style="font-family: var(--font-mono); font-weight: 600; color: var(--text-main);">${escapeHtml(item.name)}</code></td>
+            <td><span style="display:inline-block; width:7px; height:7px; border-radius:50%; background:${category.color}; margin-right:6px;"></span>${escapeHtml(category.title.split('. ')[1])}</td>
+            <td style="color: var(--text-muted);">${escapeHtml(item.desc)}</td>
+            <td><span class="plugin-badge">${escapeHtml(item.type)}</span></td>
+          `;
+          tableBody.appendChild(row);
+        });
+      });
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+
+    // Event listeners
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.toLowerCase().trim();
+      render();
+    });
+
+    filterStrip.addEventListener('click', (e) => {
+      if (!e.target.classList.contains('pill')) return;
+      document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+      e.target.classList.add('active');
+      currentFilter = e.target.getAttribute('data-cat');
+      render();
+    });
+
+    btnGrid.addEventListener('click', () => {
+      btnGrid.classList.add('active');
+      btnTable.classList.remove('active');
+      gridContainer.style.display = 'flex';
+      listViewTable.style.display = 'none';
+    });
+
+    btnTable.addEventListener('click', () => {
+      btnTable.classList.add('active');
+      btnGrid.classList.remove('active');
+      gridContainer.style.display = 'none';
+      listViewTable.style.display = 'table';
+    });
+
+    // Initial render
+    render();
+  </script>
+</body>
+</html>

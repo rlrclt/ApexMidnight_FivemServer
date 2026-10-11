@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องมือคำนวณอัตราทดเกียร์และแรงบิด (FiveM Drivetrain Calculator)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-base: #0b0f19;
+            --bg-card: #151d2e;
+            --bg-input: #1e293b;
+            --bg-hover: #2d3b55;
+            --accent-cyan: #38bdf8;
+            --accent-amber: #fbbf24;
+            --accent-emerald: #34d399;
+            --accent-rose: #f87171;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-clr: #334155;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Kanit', -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            padding: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 1320px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-clr);
+            padding-bottom: 14px;
+        }
+
+        header h1 {
+            font-size: 1.45rem;
+            color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        header .subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .layout-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1080px) {
+            .layout-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-clr);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--accent-cyan);
+            border-bottom: 1px solid var(--border-clr);
+            padding-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 10px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .help-text {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-top: -3px;
+            line-height: 1.3;
+        }
+
+        .notice-box {
+            background: rgba(56, 189, 248, 0.08);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: 0.8rem;
+            color: #7dd3fc;
+            line-height: 1.4;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-clr);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: #fff;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.15s;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        input[type="text"] {
+            font-family: 'Kanit', sans-serif;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border-clr);
+            color: var(--text-main);
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            text-align: center;
+            transition: all 0.15s ease;
+        }
+
+        .btn:hover {
+            background: var(--accent-cyan);
+            color: #0b0f19;
+            border-color: var(--accent-cyan);
+            font-weight: 600;
+        }
+
+        .gear-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+
+        .gear-table th, .gear-table td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid #1e293b;
+        }
+
+        .gear-table th {
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.78rem;
+            letter-spacing: 0.5px;
+        }
+
+        .table-input {
+            width: 75px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-clr);
+            padding: 4px 6px;
+            color: #fff;
+            border-radius: 4px;
+            text-align: right;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+        }
+
+        .table-input:focus {
+            border-color: var(--accent-cyan);
+            outline: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 7px;
+            border-radius: 4px;
+            font-size: 0.78rem;
+            font-weight: 500;
+            font-family: 'JetBrains Mono', monospace;
+            white-space: nowrap;
+        }
+        .badge-cyan { background: rgba(56, 189, 248, 0.12); color: var(--accent-cyan); border: 1px solid rgba(56, 189, 248, 0.3); }
+        .badge-amber { background: rgba(251, 191, 36, 0.12); color: var(--accent-amber); border: 1px solid rgba(251, 191, 36, 0.3); }
+        .badge-emerald { background: rgba(52, 211, 153, 0.12); color: var(--accent-emerald); border: 1px solid rgba(52, 211, 153, 0.3); }
+        .badge-rose { background: rgba(248, 113, 113, 0.12); color: var(--accent-rose); border: 1px solid rgba(248, 113, 113, 0.3); }
+
+        .bars-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 6px;
+        }
+
+        .bar-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+        }
+
+        .bar-label strong {
+            color: var(--text-main);
+        }
+
+        .bar-track {
+            height: 18px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #1e293b;
+        }
+
+        .bar-fill-speed {
+            background: linear-gradient(90deg, #0284c7, var(--accent-cyan));
+            height: 100%;
+            transition: width 0.25s ease;
+            border-radius: 3px;
+        }
+
+        .code-output {
+            background-color: #070a12;
+            border: 1px solid var(--border-clr);
+            border-radius: 8px;
+            padding: 14px 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            color: #7dd3fc;
+            overflow-x: auto;
+            white-space: pre;
+            line-height: 1.5;
+            max-height: 380px;
+        }
+
+        .btn-copy {
+            background: var(--accent-emerald);
+            color: #064e3b;
+            font-weight: 600;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            cursor: pointer;
+            align-self: flex-start;
+            font-size: 0.9rem;
+            transition: all 0.15s ease;
+        }
+        .btn-copy:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        .btn-copy:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div>
+            <h1>เครื่องมือคำนวณอัตราทดเกียร์ & แรงบิด (FiveM Drivetrain Simulator)</h1>
+            <div class="subtitle">คำนวณแม่นยำ 100% ตรงตามฟิสิกส์ใน veh_drivetrain/client.lua และ handling.meta</div>
+        </div>
+    </header>
+
+    <div class="layout-grid">
+        <!-- เมนูป้อนข้อมูลพื้นฐาน -->
+        <div class="card">
+            <div class="card-title">1. ข้อมูลพื้นฐานจาก handling.meta</div>
+
+            <div class="form-group">
+                <label>ชื่อโมเดลรถ (Spawn Name)</label>
+                <input type="text" id="vehModel" value="elegy">
+                <span class="help-text">ชื่อสปอว์นรถ เช่น elegy, thrax, sultan</span>
+            </div>
+
+            <div class="form-group">
+                <label>fInitialDriveMaxFlatVel (กม./ชม.)</label>
+                <input type="number" id="maxFlatVel" value="240.0" step="5.0">
+                <span class="help-text">ความเร็วสูงสุดใน handling.meta (สคริปต์จะอ้างอิงค่าจริงจากรถแต่ละคันโดยตรง)</span>
+            </div>
+
+            <div class="form-group">
+                <label>fInitialDriveForce (แรงดึงตั้งต้น)</label>
+                <input type="number" id="baseForce" value="0.350" step="0.01">
+                <span class="help-text">ค่าแรงบิดหลักจาก handling.meta (ฐาน 1.0x)</span>
+            </div>
+
+            <div class="form-group">
+                <label>จำนวนเกียร์เดินหน้า (nInitialDriveGears)</label>
+                <select id="gearCount" onchange="regenerateGears()">
+                    <option value="4">4 เกียร์</option>
+                    <option value="5">5 เกียร์</option>
+                    <option value="6" selected>6 เกียร์</option>
+                    <option value="7">7 เกียร์</option>
+                    <option value="8">8 เกียร์</option>
+                </select>
+                <span class="help-text">จำนวนเกียร์ที่ต้องการให้รถมีในเกม</span>
+            </div>
+
+            <div class="card-title" style="margin-top: 10px;">2. การตั้งค่ารอบเครื่องยนต์ (RPM Specs)</div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>รอบเดินเบา (Idle)</label>
+                    <input type="number" id="idleRpm" value="1200" step="50">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>รอบตัดสูงสุด (Redline)</label>
+                    <input type="number" id="maxRpm" value="9000" step="100">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group" style="flex: 1;">
+                    <label>ระยะสวิงเดินเบา (±RPM)</label>
+                    <input type="number" id="idleSwing" value="80" step="5">
+                    <span class="help-text">Cam Lope เสียงหอบ (เช่น ±80)</span>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>ความถี่สวิง (Hz)</label>
+                    <input type="number" id="idleHz" value="1.0" step="0.1">
+                    <span class="help-text">รอบต่อวินาที (1.0 = ทั่วไป)</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>แรงหน่วงตอนยกคันเร่ง (Inertia: 0.10 - 0.95)</label>
+                <input type="number" id="engineInertia" value="0.85" step="0.05" min="0.10" max="0.95">
+                <span class="help-text">0.18 = ตัดรอบไวแบบไฮเปอร์คาร์, 0.85 = หน่วงนุ่มนวลแบบสปอร์ต</span>
+            </div>
+
+            <div class="card-title" style="margin-top: 10px;">พรีเซ็ตสไตล์การขับขี่</div>
+            <div class="preset-buttons">
+                <button class="btn" onclick="applyPreset('na_sport')">Sport / NA Spec<br><small style="opacity:0.7;">(Elegy R34 / สปอร์ต)</small></button>
+                <button class="btn" onclick="applyPreset('hyper_w16')">Hypercar W16<br><small style="opacity:0.7;">(Thrax / Bugatti)</small></button>
+                <button class="btn" onclick="applyPreset('gt3_race')">GT3 Race Spec<br><small style="opacity:0.7;">(สมดุลสนามแข่ง)</small></button>
+                <button class="btn" onclick="applyPreset('highway_turbo')">Turbo Drag<br><small style="opacity:0.7;">(ต้นอืด ปลายไหล)</small></button>
+            </div>
+        </div>
+
+        <!-- หน้าต่างแสดงผลและการคำนวณ -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div class="card">
+                <div class="card-title">
+                    <span>ตารางคำนวณแต่ละเกียร์ (Exact Physics Formula)</span>
+                    <span id="calculatedTopSpeed" class="badge badge-cyan" style="font-size: 0.85rem;"></span>
+                </div>
+
+                <table class="gear-table">
+                    <thead>
+                        <tr>
+                            <th>เกียร์</th>
+                            <th>สัดส่วน (Ratio)</th>
+                            <th>ความเร็วตัดเกียร์</th>
+                            <th>รอบสับขึ้น (Upshift)</th>
+                            <th>รอบสับลง (Downshift)</th>
+                            <th>แรงดึงจริง (Force)</th>
+                            <th>รอบตก (Drop RPM)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gearTableBody">
+                        <!-- รายการเกียร์จะถูกสร้างโดย JS -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-title">กราฟช่วงความเร็วของแต่ละเกียร์ (Speed Coverage)</div>
+                <div class="bars-container" id="visualBars">
+                    <!-- Progress bars -->
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">โค้ด Config สำหรับนำไปใช้งาน (คัดลอกใส่ config.lua ได้ทันที)</div>
+                <div class="code-output" id="luaOutput"></div>
+                <button class="btn-copy" onclick="copyLuaCode()">📋 คัดลอกโค้ด Lua</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let gearData = [];
+
+    const presets = {
+        na_sport: {
+            speedRatios: [0.32, 0.44, 0.58, 0.72, 0.88, 1.05, 1.18, 1.30],
+            forces: [0.44, 0.38, 0.38, 0.35, 0.34, 0.33, 0.31, 0.30],
+            upshifts: [7800, 8200, 8200, 8200, 8200, 8200, 8200, 8200],
+            downshifts: [0, 3200, 3500, 3800, 4000, 4000, 4000, 4000],
+            inertia: 0.85,
+            idleRpm: 1200,
+            idleSwing: 80,
+            idleHz: 1.0,
+            maxRpm: 9000
+        },
+        hyper_w16: {
+            speedRatios: [0.25, 0.42, 0.58, 0.74, 0.89, 1.05, 1.20, 1.32],
+            forces: [0.58, 0.48, 0.46, 0.45, 0.44, 0.43, 0.41, 0.40],
+            upshifts: [7100, 7200, 7200, 7200, 7200, 7200, 7200, 7200],
+            downshifts: [0, 2800, 3000, 3200, 3400, 3600, 3600, 3600],
+            inertia: 0.18,
+            idleRpm: 1500,
+            idleSwing: 35,
+            idleHz: 1.5,
+            maxRpm: 8000
+        },
+        gt3_race: {
+            speedRatios: [0.30, 0.46, 0.62, 0.78, 0.92, 1.05, 1.15, 1.25],
+            forces: [0.48, 0.42, 0.38, 0.35, 0.32, 0.30, 0.28, 0.27],
+            upshifts: [7800, 8000, 8000, 8000, 8000, 8000, 8000, 8000],
+            downshifts: [0, 3400, 3700, 4000, 4200, 4200, 4200, 4200],
+            inertia: 0.70,
+            idleRpm: 1100,
+            idleSwing: 50,
+            idleHz: 1.2,
+            maxRpm: 8500
+        },
+        highway_turbo: {
+            speedRatios: [0.38, 0.55, 0.72, 0.88, 1.02, 1.15, 1.25, 1.35],
+            forces: [0.35, 0.42, 0.48, 0.45, 0.40, 0.36, 0.32, 0.30],
+            upshifts: [8000, 8200, 8200, 8200, 8200, 8200, 8200, 8200],
+            downshifts: [0, 3000, 3200, 3500, 3800, 3800, 3800, 3800],
+            inertia: 0.75,
+            idleRpm: 1000,
+            idleSwing: 60,
+            idleHz: 1.0,
+            maxRpm: 8800
+        }
+    };
+
+    function initGears() {
+        applyPreset('na_sport');
+    }
+
+    function applyPreset(name) {
+        const count = parseInt(document.getElementById('gearCount').value, 10);
+        const p = presets[name];
+
+        document.getElementById('idleRpm').value = p.idleRpm;
+        document.getElementById('idleSwing').value = p.idleSwing;
+        document.getElementById('idleHz').value = p.idleHz;
+        document.getElementById('maxRpm').value = p.maxRpm;
+        document.getElementById('engineInertia').value = p.inertia;
+
+        gearData = [];
+        for (let i = 0; i < count; i++) {
+            let sRatio = p.speedRatios[i] !== undefined ? p.speedRatios[i] : (0.3 + (i / Math.max(1, count - 1)) * 0.75);
+            let f = p.forces[i] !== undefined ? p.forces[i] : 0.35;
+            let up = p.upshifts[i] !== undefined ? p.upshifts[i] : Math.round(p.maxRpm * 0.94);
+            let down = (i === 0) ? 0 : (p.downshifts[i] !== undefined ? p.downshifts[i] : Math.round(p.idleRpm + (p.maxRpm - p.idleRpm) * 0.38));
+
+            gearData.push({
+                speedRatio: Math.round(sRatio * 100) / 100,
+                force: Math.round(f * 100) / 100,
+                upshiftRpm: up,
+                downshiftRpm: down
+            });
+        }
+        render();
+    }
+
+    function regenerateGears() {
+        const count = parseInt(document.getElementById('gearCount').value, 10);
+        const maxRpm = parseFloat(document.getElementById('maxRpm').value) || 9000;
+        const idleRpm = parseFloat(document.getElementById('idleRpm').value) || 1200;
+
+        let newData = [];
+        for (let i = 0; i < count; i++) {
+            if (gearData[i]) {
+                newData.push(gearData[i]);
+            } else {
+                let ratio = Math.round((0.32 + (i / Math.max(1, count - 1)) * 0.73) * 100) / 100;
+                let defaultUp = Math.round(maxRpm * 0.92);
+                let defaultDown = (i === 0) ? 0 : Math.round(idleRpm + (maxRpm - idleRpm) * 0.35);
+                newData.push({
+                    speedRatio: ratio,
+                    force: 0.35,
+                    upshiftRpm: defaultUp,
+                    downshiftRpm: defaultDown
+                });
+            }
+        }
+        gearData = newData;
+        render();
+    }
+
+    function updateRow(index, field, value) {
+        gearData[index][field] = parseFloat(value) || 0;
+        render();
+    }
+
+    function render() {
+        const effectiveBaseVel = parseFloat(document.getElementById('maxFlatVel').value) || 200.0;
+        const baseForce = parseFloat(document.getElementById('baseForce').value) || 0.35;
+        const idleRpm = parseFloat(document.getElementById('idleRpm').value) || 1200;
+        const idleSwing = parseFloat(document.getElementById('idleSwing').value) || 80;
+        const idleHz = parseFloat(document.getElementById('idleHz').value) || 1.0;
+        const maxRpm = parseFloat(document.getElementById('maxRpm').value) || 9000;
+        const engineInertia = parseFloat(document.getElementById('engineInertia').value) || 0.85;
+        const vehModel = document.getElementById('vehModel').value || "elegy";
+
+        const tbody = document.getElementById('gearTableBody');
+        const visual = document.getElementById('visualBars');
+        tbody.innerHTML = '';
+        visual.innerHTML = '';
+
+        let lastSpeed = 0;
+
+        gearData.forEach((g, idx) => {
+            const gearNum = idx + 1;
+            // Exact Formula: currentGearMaxSpeed = math.max(10.0, baseMaxFlatVel * speedRatio)
+            const topSpeed = Math.round(effectiveBaseVel * g.speedRatio * 10) / 10;
+            const effectiveForce = g.force.toFixed(2);
+
+            // คำนวณรอบตกตอนสับเกียร์ (RPM Drop) ตรงตาม client.lua:
+            // nextSpeedFraction = speedKmh / nextGearMaxSpeed
+            // simulatedRpm = idleRpm + (maxRpm - idleRpm) * nextSpeedFraction
+            let rpmDrop = "-";
+            if (idx > 0) {
+                const prevRatio = gearData[idx - 1].speedRatio;
+                const prevUp = gearData[idx - 1].upshiftRpm || (maxRpm * 0.94);
+                // ความเร็วรถ ณ จุดสับเกียร์:
+                const shiftSpeedFraction = Math.max(0.1, (prevUp - idleRpm) / (maxRpm - idleRpm));
+                const shiftSpeed = effectiveBaseVel * prevRatio * shiftSpeedFraction;
+                // รอบตกในเกียร์ใหม่:
+                const nextFraction = Math.min(1.0, shiftSpeed / topSpeed);
+                const dropped = Math.round(idleRpm + (maxRpm - idleRpm) * nextFraction);
+                rpmDrop = `~${dropped} RPM`;
+            }
+
+            // Hysteresis Guard Check:
+            const isDownshiftSafe = (idx === 0) || (g.downshiftRpm < (g.upshiftRpm * 0.65));
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>เกียร์ ${gearNum}</strong></td>
+                <td>
+                    <input type="number" step="0.01" class="table-input" value="${g.speedRatio.toFixed(2)}"
+                           onchange="updateRow(${idx}, 'speedRatio', this.value)">
+                </td>
+                <td><span class="badge badge-cyan">${topSpeed} กม./ชม.</span></td>
+                <td>
+                    <input type="number" step="50" class="table-input" value="${Math.round(g.upshiftRpm)}"
+                           onchange="updateRow(${idx}, 'upshiftRpm', this.value)">
+                </td>
+                <td>
+                    ${idx === 0 ? '<span class="badge" style="opacity:0.5;">-</span>' : `
+                    <input type="number" step="50" class="table-input" value="${Math.round(g.downshiftRpm)}"
+                           onchange="updateRow(${idx}, 'downshiftRpm', this.value)">
+                    ${!isDownshiftSafe ? '<span class="badge badge-rose" title="รอบสับลงสูงเกินไป อาจทำให้เกียร์เด้งสลับวนลูป">⚠️</span>' : ''}
+                    `}
+                </td>
+                <td>
+                    <input type="number" step="0.01" class="table-input" value="${effectiveForce}"
+                           onchange="updateRow(${idx}, 'force', this.value)">
+                </td>
+                <td><span class="badge badge-emerald">${rpmDrop}</span></td>
+            `;
+            tbody.appendChild(tr);
+
+            // กราฟแท่งความเร็ว
+            const barPct = Math.min(100, Math.round((topSpeed / (effectiveBaseVel * 1.35)) * 100));
+            const bar = document.createElement('div');
+            bar.className = 'bar-group';
+            bar.innerHTML = `
+                <div class="bar-label">
+                    <span><strong>เกียร์ ${gearNum}</strong> (ตันที่ ${topSpeed} กม./ชม.)</span>
+                    <span>สับขึ้นที่ <strong>${Math.round(g.upshiftRpm)} RPM</strong> | แรงดึง: <strong>${effectiveForce}</strong></span>
+                </div>
+                <div class="bar-track">
+                    <div class="bar-fill-speed" style="width: ${barPct}%;"></div>
+                </div>
+            `;
+            visual.appendChild(bar);
+
+            lastSpeed = topSpeed;
+        });
+
+        document.getElementById('calculatedTopSpeed').innerText = `ความเร็วสูงสุดเกียร์สุดท้าย: ${lastSpeed} กม./ชม.`;
+
+        // สร้างโค้ดภาษา Lua ตรงตามโครงสร้าง Config.Vehicles ปัจจุบัน
+        let upshiftLua = gearData.map((g, i) => `        [${i+1}] = ${Math.round(g.upshiftRpm)}, -- เกียร์ ${i+1} สับขึ้นที่ ${Math.round(g.upshiftRpm)} RPM`).join('\n');
+        let downshiftLua = gearData.slice(1).map((g, i) => `        [${i+2}] = ${Math.round(g.downshiftRpm)}, -- ชะลอลงมาแตะ ${Math.round(g.downshiftRpm)} RPM สับลงเกียร์ ${i+1}`).join('\n');
+        let gearMaxSpeedsLua = gearData.map((g, i) => `        [${i+1}] = ${Math.round(effectiveBaseVel * g.speedRatio)}, -- เกียร์ ${i+1} ล็อกความเร็วที่ ${Math.round(effectiveBaseVel * g.speedRatio)} กม./ชม.`).join('\n');
+        let speedRatiosLua = gearData.map((g, i) => `        [${i+1}] = ${g.speedRatio.toFixed(2)}, -- สัดส่วนเกียร์ ${i+1}`).join('\n');
+        let forcesLua = gearData.map((g, i) => `        [${i+1}] = ${g.force.toFixed(2)}, -- เกียร์ ${i+1} แรงดึง ${g.force.toFixed(2)}`).join('\n');
+
+        let luaString = `local ${vehModel.toLowerCase()}Spec = {
+    name = "${vehModel.toUpperCase()} Custom Tuned Spec",
+    idleRpm = ${Math.round(idleRpm)},
+    idleSwing = ${Math.round(idleSwing)},   -- ระยะรอบสวิง ±RPM (Cam Lope)
+    idleHz = ${idleHz.toFixed(1)},     -- ความถี่การสวิง (Hz: รอบต่อวินาที)
+    maxRpm = ${Math.round(maxRpm)},
+    lockGearSpeed = true, -- ล็อกความเร็วไม่ให้ทะลุเพดานเกียร์ (ยกเว้นเกียร์สุดท้ายที่ปล่อยให้ไหลตามแรงเครื่อง)
+    upshiftRpm = {
+${upshiftLua}
+    },
+    downshiftRpm = {
+${downshiftLua}
+    },
+    engineBrakingInertia = ${engineInertia.toFixed(2)}, -- แรงเฉื่อยตอนยกคันเร่ง
+    gearMaxSpeeds = {
+${gearMaxSpeedsLua}
+    },
+    gearRatios = {
+${speedRatiosLua}
+    },
+    -- กำหนดค่า fInitialDriveForce รายเกียร์โดยตรง
+    gearDriveForce = {
+${forcesLua}
+    }
+}
+
+-- นำไปใส่ใน Config.Vehicles:
+Config.Vehicles[\`${vehModel.toLowerCase()}\`] = ${vehModel.toLowerCase()}Spec
+Config.Vehicles["${vehModel.toLowerCase()}"] = ${vehModel.toLowerCase()}Spec`;
+
+        document.getElementById('luaOutput').innerText = luaString;
+    }
+
+    function copyLuaCode() {
+        const text = document.getElementById('luaOutput').innerText;
+        navigator.clipboard.writeText(text).then(() => {
+            alert("คัดลอกโค้ด Lua เรียบร้อย! นำไปวางใน config.lua ได้ทันที");
+        });
+    }
+
+    document.querySelectorAll('#maxFlatVel, #baseForce, #idleRpm, #idleSwing, #idleHz, #maxRpm, #engineInertia, #vehModel').forEach(el => {
+        el.addEventListener('input', render);
+    });
+
+    window.onload = initGears;
+</script>
+
+</body>
+</html>

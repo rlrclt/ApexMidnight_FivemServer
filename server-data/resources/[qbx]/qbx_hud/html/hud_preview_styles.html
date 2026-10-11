@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FiveM Qbox Player HUD - Preview & Design Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Prompt:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --bg-dark: #0a0d14;
+      --card-bg: rgba(16, 21, 33, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-color: #3b82f6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      
+      /* Status Colors */
+      --c-health: #10b981;
+      --c-armor: #3b82f6;
+      --c-hunger: #f59e0b;
+      --c-thirst: #06b6d4;
+      --c-stamina: #84cc16;
+      --c-oxygen: #0284c7;
+      --c-stress: #ef4444;
+      --c-voice: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background: radial-gradient(circle at top right, #131d2e, #07090e 70%);
+      color: var(--text-main);
+      font-family: 'Prompt', 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      gap: 24px;
+    }
+
+    header {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 20px 28px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .header-title h1 {
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-title p {
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .top-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .btn-toggle-bg {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-toggle-bg:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: #60a5fa;
+    }
+
+    /* Simulation Control Sliders */
+    .controls-panel {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 18px 24px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 16px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .slider-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .slider-item label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .slider-item input[type="range"] {
+      appearance: none;
+      -webkit-appearance: none;
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .slider-item input[type="range"]::-webkit-slider-thumb {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #60a5fa;
+      cursor: pointer;
+      box-shadow: 0 0 8px rgba(96, 165, 250, 0.6);
+      transition: transform 0.1s;
+    }
+
+    .slider-item input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Design Showcase Section */
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 28px;
+    }
+
+    .style-card {
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .style-card:hover {
+      border-color: rgba(96, 165, 250, 0.4);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+    }
+
+    .style-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .style-title-group h2 {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tag-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .tag-modern { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .tag-tactical { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .tag-clean { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    .style-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .canvas-viewport {
+      height: 220px;
+      position: relative;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: flex-end;
+      padding: 30px;
+      transition: background 0.3s;
+      overflow: hidden;
+    }
+
+    .canvas-viewport.bg-game {
+      background-image: linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.2) 60%),
+                        radial-gradient(ellipse at 80% 20%, rgba(30, 58, 138, 0.35), transparent 50%),
+                        repeating-linear-gradient(45deg, rgba(255,255,255,0.02) 0, rgba(255,255,255,0.02) 1px, transparent 0, transparent 20px),
+                        #151922;
+    }
+
+    .canvas-viewport.bg-solid {
+      background: #090b10;
+    }
+
+    .minimap-placeholder {
+      position: absolute;
+      left: 30px;
+      bottom: 25px;
+      width: 140px;
+      height: 100px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(8px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 11px;
+      gap: 6px;
+      user-select: none;
+    }
+
+    .minimap-placeholder i {
+      font-size: 18px;
+    }
+
+    .hud-layer {
+      position: relative;
+      z-index: 10;
+      margin-left: 170px; /* Offset next to minimap */
+    }
+
+    .style-details {
+      padding: 18px 24px;
+      border-top: 1px solid var(--card-border);
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 20px;
+      font-size: 13px;
+      background: rgba(0, 0, 0, 0.15);
+    }
+
+    .detail-item strong {
+      color: #e2e8f0;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .detail-item p {
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .pros-cons {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .pro-tag {
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ========================================================
+       STYLE 1: MODERN CIRCULAR RING (อัปเกรดจากแบบเดิม นุ่มนวล ดูแพง)
+       ======================================================== */
+    .style1-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .s1-circle-node {
+      position: relative;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+
+    .s1-circle-node:hover {
+      transform: translateY(-3px) scale(1.05);
+    }
+
+    .s1-circle-node svg {
+      transform: rotate(-90deg);
+      width: 50px;
+      height: 50px;
+    }
+
+    .s1-bg-ring {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 3.5;
+    }
+
+    .s1-val-ring {
+      fill: none;
+      stroke-width: 3.8;
+      stroke-linecap: round;
+      stroke-dasharray: 125.6; /* 2 * PI * 20 */
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 0.35s ease, stroke 0.3s ease;
+    }
+
+    .s1-center-disc {
+      position: absolute;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: rgba(18, 24, 38, 0.85);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+    }
+
+    .s1-center-disc i {
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+
+    .s1-glow-active {
+      filter: drop-shadow(0 0 6px currentColor);
+    }
+
+    /* ========================================================
+       STYLE 2: SLEEK HORIZONTAL / TACTICAL BARS
+       ======================================================== */
+    .style2-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background: rgba(10, 15, 26, 0.85);
+      backdrop-filter: blur(14px);
+      padding: 12px 16px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+      min-width: 310px;
+    }
+
+    .s2-row {
+      display: grid;
+      grid-template-columns: 22px 1fr 34px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .s2-icon {
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .s2-bar-track {
+      height: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .s2-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.3s ease;
+      position: relative;
+    }
+
+    .s2-bar-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(to bottom, rgba(255,255,255,0.35), transparent);
+    }
+
+    .s2-percent {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: right;
+      color: #e2e8f0;
+    }
+
+    /* ========================================================
+       STYLE 3: COMPACT FLOATING PILL (Glassmorphism Capsule)
+       ======================================================== */
+    .style3-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(18px);
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    .s3-pill-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 0.2s ease;
+    }
+
+    .s3-pill-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .s3-icon {
+      font-size: 13px;
+    }
+
+    .s3-meter {
+      width: 32px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .s3-meter-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .s3-value {
+      font-family: 'Chakra Petch', sans-serif;
+      font-size: 11px;
+      font-weight: 600;
+      color: #f1f5f9;
+    }
+
+    /* Low pulse warning animation */
+    @keyframes pulse-danger {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.92); }
+    }
+    .pulse-low {
+      animation: pulse-danger 1.2s infinite ease-in-out;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .style-details {
+        grid-template-columns: 1fr;
+      }
+      .canvas-viewport {
+        padding: 15px;
+      }
+      .hud-layer {
+        margin-left: 110px;
+      }
+      .minimap-placeholder {
+        width: 90px;
+        height: 70px;
+        left: 15px;
+        bottom: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header Navigation -->
+  <header>
+    <div class="header-title">
+      <h1><i class="fa-solid fa-gamepad"></i> FiveM Qbox HUD - Design Showcase</h1>
+      <p>พรีวิวตัวอย่างสไตล์แถบสถานะ (HP, Armor, Hunger, Thirst, Stamina, Oxygen, Stress, Voice) สำหรับคุณ yoru</p>
+    </div>
+    <div class="top-controls">
+      <button class="btn-toggle-bg" onclick="toggleCanvasBackground()">
+        <i class="fa-solid fa-mountain-sun"></i> สลับพื้นหลัง (In-Game / Dark Solid)
+      </button>
+    </div>
+  </header>
+
+  <!-- Interactive Simulation Controls -->
+  <div class="controls-panel">
+    <div class="slider-item">
+      <label><span>HP (เลือด)</span><span id="txt-val-hp">85%</span></label>
+      <input type="range" id="input-hp" min="0" max="100" value="85" oninput="updateValues()">
+    </div>
+    <div class="slider-item">
+      <label><span>Armor (เกราะ)</span><span id="txt-val-armor">50%</span></label>
+      <input type="range" id="input-armor" min="0" max="100" value="50" oninput="updateValues()">
+    </div>
+    <div class="slider-item">
+      <label><span>Hunger (อาหาร)</span><span id="txt-val-hunger">72%</span></label>
+      <input type="range" id="input-hunger" min="0" max="100" value="72" oninput="updateValues()">
+    </div>
+    <div class="slider-item">
+      <label><span>Thirst (น้ำ)</span><span id="txt-val-thirst">30%</span></label>
+      <input type="range" id="input-thirst" min="0" max="100" value="30" oninput="updateValues()">
+    </div>
+    <div class="slider-item">
+      <label><span>Stamina (พลังกาย)</span><span id="txt-val-stamina">90%</span></label>
+      <input type="range" id="input-stamina" min="0" max="100" value="90" oninput="updateValues()">
+    </div>
+    <div class="slider-item">
+      <label><span>Oxygen (ออกซิเจน)</span><span id="txt-val-oxygen">100%</span></label>
+      <input type="range" id="input-oxygen" min="0" max="100" value="100" oninput="updateValues()">
+    </div>
+    <div class="slider-item">
+      <label><span>Stress (ความเครียด)</span><span id="txt-val-stress">15%</span></label>
+      <input type="range" id="input-stress" min="0" max="100" value="15" oninput="updateValues()">
+    </div>
+    <div class="slider-item">
+      <label><span>Voice Range (เสียง)</span><span id="txt-val-voice">66% (2)</span></label>
+      <input type="range" id="input-voice" min="1" max="3" value="2" oninput="updateValues()">
+    </div>
+  </div>
+
+  <!-- Showcase Cards Container -->
+  <div class="showcase-grid">
+
+    <!-- ==================== STYLE 1 ==================== -->
+    <div class="style-card">
+      <div class="style-header">
+        <div class="style-title-group">
+          <h2>สไตล์ 1: Minimal Modern Circular (Radial Rings)</h2>
+          <div class="style-desc">วงกลมโปร่งแสงโมเดิร์น พร้อมวงแหวน Progress คมชัด สไตล์ที่พัฒนาต่อยอดจาก qbx_hud เดิมให้สวยพรีเมียมขึ้น</div>
+        </div>
+        <span class="tag-badge tag-modern">Modern Radial</span>
+      </div>
+
+      <div class="canvas-viewport bg-game" id="viewport-1">
+        <div class="minimap-placeholder">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <span>MINIMAP</span>
+        </div>
+
+        <div class="hud-layer">
+          <div class="style1-container">
+            <!-- Voice -->
+            <div class="s1-circle-node" title="Microphone Distance">
+              <svg viewBox="0 0 44 44">
+                <circle class="s1-bg-ring" cx="22" cy="22" r="19"></circle>
+                <circle class="s1-val-ring" id="s1-ring-voice" cx="22" cy="22" r="19" style="stroke: var(--c-voice);"></circle>
+              </svg>
+              <div class="s1-center-disc">
+                <i class="fa-solid fa-microphone" style="color: var(--c-voice);"></i>
+              </div>
+            </div>
+
+            <!-- Health -->
+            <div class="s1-circle-node" id="s1-node-hp" title="Health">
+              <svg viewBox="0 0 44 44">
+                <circle class="s1-bg-ring" cx="22" cy="22" r="19"></circle>
+                <circle class="s1-val-ring" id="s1-ring-hp" cx="22" cy="22" r="19" style="stroke: var(--c-health);"></circle>
+              </svg>
+              <div class="s1-center-disc">
+                <i class="fa-solid fa-heart" style="color: var(--c-health);"></i>
+              </div>
+            </div>
+
+            <!-- Armor -->
+            <div class="s1-circle-node" id="s1-node-armor" title="Armor">
+              <svg viewBox="0 0 44 44">
+                <circle class="s1-bg-ring" cx="22" cy="22" r="19"></circle>
+                <circle class="s1-val-ring" id="s1-ring-armor" cx="22" cy="22" r="19" style="stroke: var(--c-armor);"></circle>
+              </svg>
+              <div class="s1-center-disc">
+                <i class="fa-solid fa-shield-halved" style="color: var(--c-armor);"></i>
+              </div>
+            </div>
+
+            <!-- Hunger -->
+            <div class="s1-circle-node" id="s1-node-hunger" title="Hunger">
+              <svg viewBox="0 0 44 44">
+                <circle class="s1-bg-ring" cx="22" cy="22" r="19"></circle>
+                <circle class="s1-val-ring" id="s1-ring-hunger" cx="22" cy="22" r="19" style="stroke: var(--c-hunger);"></circle>
+              </svg>
+              <div class="s1-center-disc">
+                <i class="fa-solid fa-burger" style="color: var(--c-hunger);"></i>
+              </div>
+            </div>
+
+            <!-- Thirst -->
+            <div class="s1-circle-node" id="s1-node-thirst" title="Thirst">
+              <svg viewBox="0 0 44 44">
+                <circle class="s1-bg-ring" cx="22" cy="22" r="19"></circle>
+                <circle class="s1-val-ring" id="s1-ring-thirst" cx="22" cy="22" r="19" style="stroke: var(--c-thirst);"></circle>
+              </svg>
+              <div class="s1-center-disc">
+                <i class="fa-solid fa-droplet" style="color: var(--c-thirst);"></i>
+              </div>
+            </div>
+
+            <!-- Stamina -->
+            <div class="s1-circle-node" id="s1-node-stamina" title="Stamina">
+              <svg viewBox="0 0 44 44">
+                <circle class="s1-bg-ring" cx="22" cy="22" r="19"></circle>
+                <circle class="s1-val-ring" id="s1-ring-stamina" cx="22" cy="22" r="19" style="stroke: var(--c-stamina);"></circle>
+              </svg>
+              <div class="s1-center-disc">
+                <i class="fa-solid fa-bolt" style="color: var(--c-stamina);"></i>
+              </div>
+            </div>
+
+            <!-- Oxygen -->
+            <div class="s1-circle-node" id="s1-node-oxygen" title="Oxygen">
+              <svg viewBox="0 0 44 44">
+                <circle class="s1-bg-ring" cx="22" cy="22" r="19"></circle>
+                <circle class="s1-val-ring" id="s1-ring-oxygen" cx="22" cy="22" r="19" style="stroke: var(--c-oxygen);"></circle>
+              </svg>
+              <div class="s1-center-disc">
+                <i class="fa-solid fa-lungs" style="color: var(--c-oxygen);"></i>
+              </div>
+            </div>
+
+            <!-- Stress -->
+            <div class="s1-circle-node" id="s1-node-stress" title="Stress">
+              <svg viewBox="0 0 44 44">
+                <circle class="s1-bg-ring" cx="22" cy="22" r="19"></circle>
+                <circle class="s1-val-ring" id="s1-ring-stress" cx="22" cy="22" r="19" style="stroke: var(--c-stress);"></circle>
+              </svg>
+              <div class="s1-center-disc">
+                <i class="fa-solid fa-brain" style="color: var(--c-stress);"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="style-details">
+        <div class="detail-item">
+          <strong>จุดเด่นและการทำงาน:</strong>
+          <p>คงรูปแบบ Circular ที่คุ้นเคยของ qbx_hud เดิม แต่เปลี่ยนโครงสร้าง SVG ให้เป็นแบบ Pure Lightweight CSS/SVG (ไม่หน่วง FPS, ตัด Quasar heavy overhead ออกได้), มี Glow เอฟเฟกต์นุ่มตา และ Pulse แจ้งเตือนเมื่อค่าต่ำกว่า 20%</p>
+        </div>
+        <div class="pros-cons">
+          <div class="pro-tag"><i class="fa-solid fa-check"></i> เข้ากับ MiniMap ทั้งแบบวงกลมและสี่เหลี่ยม</div>
+          <div class="pro-tag"><i class="fa-solid fa-check"></i> ประหยัดพื้นที่ด้านสูงของจอภาพ</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STYLE 2 ==================== -->
+    <div class="style-card">
+      <div class="style-header">
+        <div class="style-title-group">
+          <h2>สไตล์ 2: Sleek Bar / Tactical HUD (แนวนอนพร้อมค่าตัวเลข)</h2>
+          <div class="style-desc">แถบแนวนอนสไตล์ Tactical/Cyberpunk แสดงแถบระดับพร้อมตัวเลขเปอร์เซ็นต์ แม่นยำ อ่านค่าง่ายทันที</div>
+        </div>
+        <span class="tag-badge tag-tactical">Tactical Precision</span>
+      </div>
+
+      <div class="canvas-viewport bg-game" id="viewport-2">
+        <div class="minimap-placeholder">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <span>MINIMAP</span>
+        </div>
+
+        <div class="hud-layer">
+          <div class="style2-container">
+            <!-- Health -->
+            <div class="s2-row">
+              <span class="s2-icon" style="color: var(--c-health);"><i class="fa-solid fa-heart"></i></span>
+              <div class="s2-bar-track">
+                <div class="s2-bar-fill" id="s2-fill-hp" style="width: 85%; background: var(--c-health);"></div>
+              </div>
+              <span class="s2-percent" id="s2-val-hp">85%</span>
+            </div>
+
+            <!-- Armor -->
+            <div class="s2-row">
+              <span class="s2-icon" style="color: var(--c-armor);"><i class="fa-solid fa-shield-halved"></i></span>
+              <div class="s2-bar-track">
+                <div class="s2-bar-fill" id="s2-fill-armor" style="width: 50%; background: var(--c-armor);"></div>
+              </div>
+              <span class="s2-percent" id="s2-val-armor">50%</span>
+            </div>
+
+            <!-- Hunger -->
+            <div class="s2-row">
+              <span class="s2-icon" style="color: var(--c-hunger);"><i class="fa-solid fa-burger"></i></span>
+              <div class="s2-bar-track">
+                <div class="s2-bar-fill" id="s2-fill-hunger" style="width: 72%; background: var(--c-hunger);"></div>
+              </div>
+              <span class="s2-percent" id="s2-val-hunger">72%</span>
+            </div>
+
+            <!-- Thirst -->
+            <div class="s2-row">
+              <span class="s2-icon" style="color: var(--c-thirst);"><i class="fa-solid fa-droplet"></i></span>
+              <div class="s2-bar-track">
+                <div class="s2-bar-fill" id="s2-fill-thirst" style="width: 30%; background: var(--c-thirst);"></div>
+              </div>
+              <span class="s2-percent" id="s2-val-thirst">30%</span>
+            </div>
+
+            <!-- Stamina / Stress Mini Row -->
+            <div class="s2-row">
+              <span class="s2-icon" style="color: var(--c-stamina);"><i class="fa-solid fa-bolt"></i></span>
+              <div class="s2-bar-track">
+                <div class="s2-bar-fill" id="s2-fill-stamina" style="width: 90%; background: var(--c-stamina);"></div>
+              </div>
+              <span class="s2-percent" id="s2-val-stamina">90%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="style-details">
+        <div class="detail-item">
+          <strong>จุดเด่นและการทำงาน:</strong>
+          <p>ให้ความรู้สึกแบบเกมเมอร์ระดับ Pro และ Tactical เหมาะกับเซิร์ฟเวอร์แนวสมจริง, Action หรือ Gang War ที่ต้องการทราบตัวเลข HP และเกราะแบบแม่นยำ 100% ตัวแถบทำ Transition ด้วย GPU Acceleration ลื่นไหล 60 FPS นิ่ง</p>
+        </div>
+        <div class="pros-cons">
+          <div class="pro-tag"><i class="fa-solid fa-check"></i> มองเห็นเปอร์เซ็นต์ชัดเจนที่สุด</div>
+          <div class="pro-tag"><i class="fa-solid fa-check"></i> จัดวางระเบียบชิดขอบหรือข้างแมพได้ลงตัว</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ==================== STYLE 3 ==================== -->
+    <div class="style-card">
+      <div class="style-header">
+        <div class="style-title-group">
+          <h2>สไตล์ 3: Compact Floating Pill (แคปซูลกระจก Minimal)</h2>
+          <div class="style-desc">แคปซูลแนวนอนชิ้นเดียว สไตล์ Glassmorphism เรียบหรู สะอาดตา ไม่รกสายตาขณะขับรถหรือ Roleplay</div>
+        </div>
+        <span class="tag-badge tag-clean">Floating Clean</span>
+      </div>
+
+      <div class="canvas-viewport bg-game" id="viewport-3">
+        <div class="minimap-placeholder">
+          <i class="fa-solid fa-map-location-dot"></i>
+          <span>MINIMAP</span>
+        </div>
+
+        <div class="hud-layer">
+          <div class="style3-container">
+            <!-- Voice -->
+            <div class="s3-pill-item">
+              <i class="fa-solid fa-microphone s3-icon" style="color: var(--c-voice);"></i>
+              <span class="s3-value" id="s3-val-voice">2</span>
+            </div>
+
+            <!-- Health -->
+            <div class="s3-pill-item" id="s3-item-hp">
+              <i class="fa-solid fa-heart s3-icon" style="color: var(--c-health);"></i>
+              <div class="s3-meter">
+                <div class="s3-meter-fill" id="s3-meter-hp" style="width: 85%; background: var(--c-health);"></div>
+              </div>
+              <span class="s3-value" id="s3-val-hp">85</span>
+            </div>
+
+            <!-- Armor -->
+            <div class="s3-pill-item" id="s3-item-armor">
+              <i class="fa-solid fa-shield-halved s3-icon" style="color: var(--c-armor);"></i>
+              <div class="s3-meter">
+                <div class="s3-meter-fill" id="s3-meter-armor" style="width: 50%; background: var(--c-armor);"></div>
+              </div>
+              <span class="s3-value" id="s3-val-armor">50</span>
+            </div>
+
+            <!-- Hunger -->
+            <div class="s3-pill-item" id="s3-item-hunger">
+              <i class="fa-solid fa-burger s3-icon" style="color: var(--c-hunger);"></i>
+              <div class="s3-meter">
+                <div class="s3-meter-fill" id="s3-meter-hunger" style="width: 72%; background: var(--c-hunger);"></div>
+              </div>
+              <span class="s3-value" id="s3-val-hunger">72</span>
+            </div>
+
+            <!-- Thirst -->
+            <div class="s3-pill-item" id="s3-item-thirst">
+              <i class="fa-solid fa-droplet s3-icon" style="color: var(--c-thirst);"></i>
+              <div class="s3-meter">
+                <div class="s3-meter-fill" id="s3-meter-thirst" style="width: 30%; background: var(--c-thirst);"></div>
+              </div>
+              <span class="s3-value" id="s3-val-thirst">30</span>
+            </div>
+
+            <!-- Stamina -->
+            <div class="s3-pill-item" id="s3-item-stamina">
+              <i class="fa-solid fa-bolt s3-icon" style="color: var(--c-stamina);"></i>
+              <div class="s3-meter">
+                <div class="s3-meter-fill" id="s3-meter-stamina" style="width: 90%; background: var(--c-stamina);"></div>
+              </div>
+              <span class="s3-value" id="s3-val-stamina">90</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="style-details">
+        <div class="detail-item">
+          <strong>จุดเด่นและการทำงาน:</strong>
+          <p>รวมทุกสถานะไว้ในแท่ง Floating Glass Capsule เพียงแท่งเดียว เบาบาง สบายตาที่สุด มี Mini-Bar สั้นๆ ควบคู่กับตัวเลข ย่อขนาดลงเมื่อค่าเต็ม 100% หรือซ่อนสถานะที่ไม่จำเป็นแบบ Dynamic Fade Out ได้อย่างสวยงาม</p>
+        </div>
+        <div class="pros-cons">
+          <div class="pro-tag"><i class="fa-solid fa-check"></i> ไม่บังมุมมองการขับรถและบรรยากาศในเมือง</div>
+          <div class="pro-tag"><i class="fa-solid fa-check"></i> สไตล์โมเดิร์นยอดฮิตในหมู่เซิร์ฟเวอร์ชั้นนำปี 2026</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    const circumference = 2 * Math.PI * 19; // ~119.38
+    
+    // ตั้งค่า stroke-dasharray เริ่มต้น
+    document.querySelectorAll('.s1-val-ring').forEach(ring => {
+      ring.style.strokeDasharray = circumference;
+    });
+
+    function setCirclePercent(ringElement, percent) {
+      if (!ringElement) return;
+      const offset = circumference - (percent / 100) * circumference;
+      ringElement.style.strokeDashoffset = offset;
+    }
+
+    function updateValues() {
+      const hp = parseInt(document.getElementById('input-hp').value);
+      const armor = parseInt(document.getElementById('input-armor').value);
+      const hunger = parseInt(document.getElementById('input-hunger').value);
+      const thirst = parseInt(document.getElementById('input-thirst').value);
+      const stamina = parseInt(document.getElementById('input-stamina').value);
+      const oxygen = parseInt(document.getElementById('input-oxygen').value);
+      const stress = parseInt(document.getElementById('input-stress').value);
+      const voice = parseInt(document.getElementById('input-voice').value);
+
+      // Label Texts
+      document.getElementById('txt-val-hp').innerText = hp + '%';
+      document.getElementById('txt-val-armor').innerText = armor + '%';
+      document.getElementById('txt-val-hunger').innerText = hunger + '%';
+      document.getElementById('txt-val-thirst').innerText = thirst + '%';
+      document.getElementById('txt-val-stamina').innerText = stamina + '%';
+      document.getElementById('txt-val-oxygen').innerText = oxygen + '%';
+      document.getElementById('txt-val-stress').innerText = stress + '%';
+      document.getElementById('txt-val-voice').innerText = voice === 1 ? '33% (1 Whisper)' : (voice === 2 ? '66% (2 Normal)' : '100% (3 Shout)');
+
+      // STYLE 1: Circles
+      setCirclePercent(document.getElementById('s1-ring-hp'), hp);
+      setCirclePercent(document.getElementById('s1-ring-armor'), armor);
+      setCirclePercent(document.getElementById('s1-ring-hunger'), hunger);
+      setCirclePercent(document.getElementById('s1-ring-thirst'), thirst);
+      setCirclePercent(document.getElementById('s1-ring-stamina'), stamina);
+      setCirclePercent(document.getElementById('s1-ring-oxygen'), oxygen);
+      setCirclePercent(document.getElementById('s1-ring-stress'), stress);
+      setCirclePercent(document.getElementById('s1-ring-voice'), (voice / 3) * 100);
+
+      // Low warning pulse
+      togglePulse('s1-node-hp', hp < 25);
+      togglePulse('s1-node-hunger', hunger < 20);
+      togglePulse('s1-node-thirst', thirst < 20);
+
+      // STYLE 2: Tactical Bars
+      document.getElementById('s2-fill-hp').style.width = hp + '%';
+      document.getElementById('s2-val-hp').innerText = hp + '%';
+      document.getElementById('s2-fill-armor').style.width = armor + '%';
+      document.getElementById('s2-val-armor').innerText = armor + '%';
+      document.getElementById('s2-fill-hunger').style.width = hunger + '%';
+      document.getElementById('s2-val-hunger').innerText = hunger + '%';
+      document.getElementById('s2-fill-thirst').style.width = thirst + '%';
+      document.getElementById('s2-val-thirst').innerText = thirst + '%';
+      document.getElementById('s2-fill-stamina').style.width = stamina + '%';
+      document.getElementById('s2-val-stamina').innerText = stamina + '%';
+
+      // STYLE 3: Pill
+      document.getElementById('s3-meter-hp').style.width = hp + '%';
+      document.getElementById('s3-val-hp').innerText = hp;
+      document.getElementById('s3-meter-armor').style.width = armor + '%';
+      document.getElementById('s3-val-armor').innerText = armor;
+      document.getElementById('s3-meter-hunger').style.width = hunger + '%';
+      document.getElementById('s3-val-hunger').innerText = hunger;
+      document.getElementById('s3-meter-thirst').style.width = thirst + '%';
+      document.getElementById('s3-val-thirst').innerText = thirst;
+      document.getElementById('s3-meter-stamina').style.width = stamina + '%';
+      document.getElementById('s3-val-stamina').innerText = stamina;
+      document.getElementById('s3-val-voice').innerText = voice;
+    }
+
+    function togglePulse(id, isLow) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      if (isLow) el.classList.add('pulse-low');
+      else el.classList.remove('pulse-low');
+    }
+
+    let isGameBg = true;
+    function toggleCanvasBackground() {
+      isGameBg = !isGameBg;
+      document.querySelectorAll('.canvas-viewport').forEach(vp => {
+        if (isGameBg) {
+          vp.classList.add('bg-game');
+          vp.classList.remove('bg-solid');
+        } else {
+          vp.classList.add('bg-solid');
+          vp.classList.remove('bg-game');
+        }
+      });
+    }
+
+    // เรียกเริ่มทำงานรอบแรก
+    window.addEventListener('DOMContentLoaded', () => {
+      updateValues();
+    });
+  </script>
+</body>
+</html>

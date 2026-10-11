@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FiveM In-Game Screen HUD Simulator - Qbox</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Prompt:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --c-health: #10b981;
+      --c-armor: #3b82f6;
+      --c-hunger: #f59e0b;
+      --c-thirst: #06b6d4;
+      --c-stamina: #84cc16;
+      --c-oxygen: #0284c7;
+      --c-stress: #ef4444;
+      --c-voice: #a855f7;
+      --c-fuel: #f97316;
+      --c-speed: #38bdf8;
+      --c-seatbelt: #22c55e;
+      --c-nitro: #ec4899;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      background-color: #05070c;
+      color: #f8fafc;
+      font-family: 'Prompt', 'Inter', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 16px;
+      overflow-x: hidden;
+    }
+
+    /* Top Control Bar */
+    .simulator-header {
+      width: 100%;
+      max-width: 1400px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border-radius: 14px;
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+
+    .header-branding {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-live {
+      background: linear-gradient(135deg, #0ea5e9, #6366f1);
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .header-branding h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-branding p {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn-group-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #cbd5e1;
+      text-transform: uppercase;
+      margin-right: 2px;
+    }
+
+    .btn-group {
+      display: flex;
+      background: rgba(0, 0, 0, 0.6);
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      gap: 3px;
+    }
+
+    .ctrl-btn {
+      background: transparent;
+      border: none;
+      color: #cbd5e1;
+      font-family: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ctrl-btn:hover {
+      color: #f8fafc;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .ctrl-btn.active {
+      background: #1d4ed8;
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 2px 10px rgba(29, 78, 216, 0.5);
+    }
+
+    /* Ratio Screen Container */
+    .viewport-outer {
+      width: 100%;
+      max-width: 1400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .screen-wrapper {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    }
+
+    /* Screen Backgrounds */
+    .screen-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: opacity 0.5s ease, filter 0.3s ease;
+    }
+
+    .bg-city-day {
+      background-image: radial-gradient(circle at 50% 60%, rgba(20, 30, 45, 0.2), rgba(5, 10, 15, 0.7)),
+        linear-gradient(180deg, rgba(30, 58, 95, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 40px);
+    }
+
+    /* Photorealistic simulated SVG landscapes for crisp offline view */
+    .screen-skyline {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Crosshair & In-Game View Elements */
+    .ingame-crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 6px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 50%;
+      box-shadow: 0 0 4px rgba(0,0,0,0.8);
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .car-cockpit-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      background: radial-gradient(circle at 50% 120%, rgba(0,0,0,0.7) 30%, transparent 70%);
+    }
+
+    .screen-wrapper.is-vehicle .car-cockpit-overlay {
+      opacity: 1;
+    }
+
+    /* Simulated Watermark / Server Header */
+    .ingame-server-logo {
+      position: absolute;
+      top: 24px;
+      right: 28px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.75);
+      text-shadow: 0 2px 5px rgba(0,0,0,0.8);
+      pointer-events: none;
+    }
+
+    .ingame-server-logo .server-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    .ingame-server-id {
+      position: absolute;
+      top: 48px;
+      right: 28px;
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 13px;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.45);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      pointer-events: none;
+    }
+
+    /* ========================================================
+       MINIMAP (RADAR HUD) - FiveM Realistic Position
+       Coordinates: Bottom-Left (approx left: 3.5%, bottom: 3.5%)
+       ======================================================== */
+    .minimap-container {
+      position: absolute;
+      left: 3.2%;
+      bottom: 3.2%;
+      width: 17.5%;
+      aspect-ratio: 1.35 / 1;
+      border-radius: 10px;
+      overflow: hidden;
+      background: #131922;
+      border: 3px solid rgba(25, 33, 44, 0.95);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+      z-index: 20;
+    }
+
+    .minimap-container.circle-map {
+      border-radius: 50%;
+      aspect-ratio: 1 / 1;
+      width: 14.5%;
+    }
+
+    .minimap-radar {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #16202c, #0d131a);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .radar-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        radial-gradient(circle at center, transparent 30%, rgba(0,0,0,0.3) 100%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 30px),
+        repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 1px, transparent 1px, transparent 30px);
+    }
+
+    .radar-roads {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .radar-player-blip {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-bottom: 14px solid #38bdf8;
+      filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.8));
+      z-index: 5;
+    }
+
+    .radar-north {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      font-weight: 800;
+      color: rgba(255, 255, 255, 0.6);
+      font-family: 'Rajdhani', sans-serif;
+    }
+
+    .minimap-location-tag {
+      position: absolute;
+      bottom: 6px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: rgba(255, 255, 255, 0.8);
+      background: linear-gradient(180deg, transparent, rgba(0,0,0,0.75));
+      padding-top: 10px;
+      padding-bottom: 4px;
+      font-family: 'Chakra Petch', sans-serif;
+    }
+
+    /* ========================================================
+       HUD CONTAINER - Positioned Relative to MiniMap
+       ======================================================== */
+    .hud-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    /* --------------------------------------------------------
+       STYLE 1: MINIMAL MODERN CIRCULAR (RADIAL RINGS)
+       Placed right alongside MiniMap or wrapping around
+       -------------------------------------------------------- */
+    .hud-style-1 {
+      position: absolute;
+      left: calc(3.2% + 18.5%);
+      bottom: 3.2%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      transition: all 0.35s ease;
+    }
+
+    .s1-cluster {
+      display: grid;
+      grid-template-columns: repeat(4, auto);
+      gap: 9px;
+      background: rgba(10, 15, 25, 0.7);
+      backdrop-filter: blur(10px);
+      padding: 9px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .s1-ring-item {
+      position: relative;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .s1-ring-svg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .s1-ring-bg {
+      fill: none;
+      stroke: rgba(255, 255, 255, 0.08);
+      stroke-width: 3.5;
+    }
+
+    .s1-ring-bar {
+      fill: none;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-dasharray: 100, 100;
+      transition: stroke-dashoffset 0.4s ease;
+    }
+
+    .s1-ring-item i {
+      font-size: 15px;
+      z-index: 2;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+    }
+
+    .s1-ring-item .ring-val {
+      position: absolute;
+      bottom: -4px;
+      right: -2px;
+      font-size: 9px;
+      font-weight: 700;
+      font-family: 'Rajdhani', sans-serif;
+      background: rgba(0, 0, 0, 0.8);
+      padding: 1px 3px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    /* --------------------------------------------------------
+       STYLE 2: SLEEK TACTICAL BARS
+       Placed parallel to right of MiniMap
+       -------------------------------------------------------- */
+    .hud-style-2 {
+      position: absolute;
+      left: calc(3.2% + 18.5%);
+      bottom: 3.2%;
+      width: 220px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: rgba(12, 16, 24, 0.85);
+      backdrop-filter: blur(12px);
+      padding: 12px 14px;
+      border-radius: 10px;
+      border-left: 3px solid #3b82f6;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+      transition: all 0.35s ease;
+    }
+
+    .s2-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .s2-icon-wrap {
+      width: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .s2-bar-track {
+      flex: 1;
+      height: 7px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .s2-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .s2-bar-val {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      width: 32px;
+      text-align: right;
+      color: #e2e8f0;
+    }
+
+    /* --------------------------------------------------------
+       STYLE 3: COMPACT FLOATING PILL (GLASS MORPHISM)
+       Positioned horizontally above or adjacent to MiniMap
+       -------------------------------------------------------- */
+    .hud-style-3 {
+      position: absolute;
+      left: 3.2%;
+      bottom: calc(3.2% + 14.5% + 12px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(16px);
+      padding: 6px 14px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+      transition: all 0.35s ease;
+    }
+
+    .s3-pill-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .s3-pill-item i {
+      font-size: 13px;
+    }
+
+    .s3-pill-divider {
+      width: 1px;
+      height: 18px;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* ========================================================
+       VEHICLE GAUGES & SPEEDOMETER (SIMULATION)
+       Appears smoothly at bottom-right or above minimap
+       ======================================================== */
+    .vehicle-hud-cluster {
+      position: absolute;
+      right: 3.5%;
+      bottom: 3.5%;
+      display: flex;
+      align-items: flex-end;
+      gap: 16px;
+      background: rgba(10, 15, 25, 0.85);
+      backdrop-filter: blur(14px);
+      padding: 16px 22px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .screen-wrapper.is-vehicle .vehicle-hud-cluster {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .speedo-main {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .speedo-number {
+      font-family: 'Chakra Petch', 'Rajdhani', sans-serif;
+      font-size: 52px;
+      font-weight: 700;
+      line-height: 0.9;
+      color: #fff;
+      letter-spacing: -1px;
+      text-shadow: 0 0 20px rgba(56, 189, 248, 0.5);
+    }
+
+    .speedo-unit {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 2px;
+      margin-top: 4px;
+    }
+
+    .speedo-gear {
+      background: rgba(56, 189, 248, 0.15);
+      color: #38bdf8;
+      border: 1px solid rgba(56, 189, 248, 0.4);
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+
+    .rpm-bar-wrap {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+
+    .rpm-fill {
+      height: 100%;
+      width: 68%;
+      background: linear-gradient(90deg, #10b981, #f59e0b 70%, #ef4444 95%);
+      border-radius: 2px;
+      box-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+    }
+
+    .vehicle-metrics {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+      padding-left: 14px;
+    }
+
+    .metric-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 600;
+    }
+
+    .metric-badge i {
+      width: 14px;
+      text-align: center;
+    }
+
+    .metric-badge.active-seatbelt {
+      color: #22c55e;
+      text-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+    }
+
+    .metric-badge.fuel-level {
+      color: #f97316;
+    }
+
+    .metric-badge.engine-health {
+      color: #38bdf8;
+    }
+
+    /* Guide Overlays / Ruler (Grid Helper for HUD positioning) */
+    .screen-guides {
+      position: absolute;
+      inset: 0;
+      border: 1px dashed rgba(59, 130, 246, 0.3);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .screen-guides.visible {
+      opacity: 1;
+    }
+
+    .guide-safezone {
+      position: absolute;
+      top: 5%;
+      bottom: 5%;
+      left: 5%;
+      right: 5%;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+
+    .guide-label {
+      position: absolute;
+      font-size: 10px;
+      color: rgba(245, 158, 11, 0.7);
+      padding: 2px 6px;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: 4px;
+      font-family: monospace;
+    }
+
+    /* Bottom Information & Comparison Panel */
+    .simulator-footer {
+      width: 100%;
+      max-width: 1400px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin-top: 4px;
+    }
+
+    .info-card {
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 14px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      backdrop-filter: blur(8px);
+    }
+
+    .info-card h3 {
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-card p {
+      font-size: 12px;
+      color: #94a3b8;
+      line-height: 1.5;
+    }
+
+    .info-card .tag-list {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    .info-tag {
+      font-size: 10px;
+      padding: 2px 7px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      font-family: monospace;
+    }
+
+    @media (max-width: 1024px) {
+      .simulator-footer {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Controller Bar -->
+  <header class="simulator-header">
+    <div class="header-branding">
+      <span class="badge-live">FiveM Preview</span>
+      <div>
+        <h1><i class="fa-solid fa-gamepad" style="color: #38bdf8;"></i> FiveM In-Game Screen HUD Simulator</h1>
+        <p>จำลองหน้าจออัตราส่วน 16:9 ในมุมมองผู้เล่นจริง เทียบกับตำแหน่ง MiniMap (Radar HUD)</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <!-- Style Switcher -->
+      <span class="btn-group-label">HUD Style:</span>
+      <div class="btn-group">
+        <button class="ctrl-btn active" onclick="switchStyle(1)">
+          <i class="fa-solid fa-circle-notch"></i> 1. Circular
+        </button>
+        <button class="ctrl-btn" onclick="switchStyle(2)">
+          <i class="fa-solid fa-bars-progress"></i> 2. Tactical Bars
+        </button>
+        <button class="ctrl-btn" onclick="switchStyle(3)">
+          <i class="fa-solid fa-capsules"></i> 3. Floating Pill
+        </button>
+      </div>
+
+      <!-- State Switcher -->
+      <span class="btn-group-label">State:</span>
+      <div class="btn-group">
+        <button class="ctrl-btn active" id="btn-onfoot" onclick="setGameState('onfoot')">
+          <i class="fa-solid fa-person-walking"></i> On Foot
+        </button>
+        <button class="ctrl-btn" id="btn-vehicle" onclick="setGameState('vehicle')">
+          <i class="fa-solid fa-car-side"></i> In Vehicle
+        </button>
+      </div>
+
+      <!-- Environment / Time Switcher -->
+      <span class="btn-group-label">Scene:</span>
+      <div class="btn-group">
+        <button class="ctrl-btn active" id="btn-night" onclick="setScene('night')">
+          <i class="fa-solid fa-moon"></i> Night City
+        </button>
+        <button class="ctrl-btn" id="btn-day" onclick="setScene('day')">
+          <i class="fa-solid fa-sun"></i> Sunset Drive
+        </button>
+      </div>
+
+      <!-- Grid Toggle -->
+      <button class="ctrl-btn" id="btn-guides" onclick="toggleGuides()">
+        <i class="fa-solid fa-border-all"></i> Safezone Grid
+      </button>
+    </div>
+  </header>
+
+  <!-- Viewport Area (16:9 Screen) -->
+  <main class="viewport-outer">
+    <div class="screen-wrapper" id="gameScreen">
+
+      <!-- Scene Background (Simulated GTA V High Quality Ambience) -->
+      <div class="screen-bg" id="screenBg">
+        <svg class="screen-skyline" id="sceneSvg" viewBox="0 0 1920 1080" preserveAspectRatio="none">
+          <defs>
+            <!-- Night Gradients -->
+            <linearGradient id="skyNight" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#050813"/>
+              <stop offset="50%" stop-color="#0f172a"/>
+              <stop offset="100%" stop-color="#1e293b"/>
+            </linearGradient>
+            <linearGradient id="cityGlowNight" x1="0" y1="1" x2="0" y2="0">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.35"/>
+              <stop offset="70%" stop-color="#8b5cf6" stop-opacity="0.1"/>
+              <stop offset="100%" stop-color="transparent"/>
+            </linearGradient>
+
+            <!-- Sunset Gradients -->
+            <linearGradient id="skySunset" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#311042"/>
+              <stop offset="40%" stop-color="#831843"/>
+              <stop offset="75%" stop-color="#ea580c"/>
+              <stop offset="100%" stop-color="#fbbf24"/>
+            </linearGradient>
+            
+            <linearGradient id="roadGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#111827"/>
+              <stop offset="100%" stop-color="#030712"/>
+            </linearGradient>
+          </defs>
+
+          <!-- Sky & Atmosphere -->
+          <rect id="skyRect" x="0" y="0" width="1920" height="1080" fill="url(#skyNight)" />
+
+          <!-- Distant Mountains -->
+          <path id="mountains" d="M0,680 L240,610 L500,650 L820,580 L1200,640 L1580,590 L1920,660 L1920,1080 L0,1080 Z" fill="#090d16" opacity="0.85"/>
+
+          <!-- Los Santos Skyline Silhouettes -->
+          <g id="skylineBuildings" fill="#0f1726" opacity="0.95">
+            <rect x="280" y="440" width="90" height="280" rx="3"/>
+            <rect x="390" y="380" width="120" height="340" rx="4"/>
+            <polygon points="450,290 440,380 460,380" fill="#38bdf8" opacity="0.7"/> <!-- Maze Bank Spire -->
+            <rect x="530" y="420" width="80" height="300"/>
+            <rect x="630" y="480" width="100" height="240"/>
+            <rect x="750" y="460" width="70" height="260"/>
+            <rect x="1100" y="450" width="110" height="270"/>
+            <rect x="1230" y="410" width="85" height="310"/>
+            <rect x="1335" y="470" width="95" height="250"/>
+            <rect x="1450" y="520" width="130" height="200"/>
+          </g>
+
+          <!-- City Windows (Tinkling Lights) -->
+          <g id="cityLights" fill="#fef08a" opacity="0.6">
+            <circle cx="410" cy="420" r="1.5"/><circle cx="430" cy="420" r="1.5"/><circle cx="470" cy="420" r="1.5"/>
+            <circle cx="410" cy="450" r="1.5"/><circle cx="450" cy="450" r="1.5"/><circle cx="480" cy="450" r="1.5"/>
+            <circle cx="420" cy="490" r="1.5"/><circle cx="440" cy="490" r="1.5"/><circle cx="470" cy="490" r="1.5"/>
+            <circle cx="550" cy="460" r="1.5"/><circle cx="580" cy="460" r="1.5"/>
+            <circle cx="560" cy="500" r="1.5"/><circle cx="590" cy="500" r="1.5"/>
+            <circle cx="1130" cy="480" r="1.5"/><circle cx="1160" cy="480" r="1.5"/>
+            <circle cx="1250" cy="440" r="1.5"/><circle cx="1280" cy="440" r="1.5"/>
+          </g>
+
+          <!-- Highway Perspective Road -->
+          <polygon points="0,1080 840,680 1080,680 1920,1080" fill="url(#roadGrad)"/>
+          <!-- Road Center Stripes -->
+          <polygon points="950,680 970,680 975,730 945,730" fill="#facc15" opacity="0.7"/>
+          <polygon points="940,760 980,760 990,830 930,830" fill="#facc15" opacity="0.8"/>
+          <polygon points="920,870 1000,870 1020,970 900,970" fill="#facc15" opacity="0.9"/>
+          
+          <!-- Highway Streetlights Glow -->
+          <circle cx="680" cy="720" r="80" fill="url(#cityGlowNight)"/>
+          <circle cx="1240" cy="720" r="80" fill="url(#cityGlowNight)"/>
+
+          <!-- Car Hood Silhouette in Vehicle mode -->
+          <g id="carHood" opacity="0" style="transition: opacity 0.4s ease;">
+            <path d="M420,1080 Q960,820 1500,1080 Z" fill="#0b0f17"/>
+            <path d="M480,1080 Q960,840 1440,1080 Z" fill="#131b28"/>
+            <line x1="960" y1="840" x2="960" y2="1080" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+          </g>
+        </svg>
+      </div>
+
+      <!-- Cockpit & Screen Elements -->
+      <div class="car-cockpit-overlay"></div>
+      <div class="ingame-crosshair" id="crosshair"></div>
+
+      <!-- Server Identity / Watermark -->
+      <div class="ingame-server-logo">
+        <div class="server-dot"></div>
+        <span>QBOX ROLEPLAY</span>
+      </div>
+      <div class="ingame-server-id">ID: 247 | FPS: 144 | PING: 18ms</div>
+
+      <!-- ==========================================
+           MINIMAP (RADAR HUD) - FiveM Authentic Mockup
+           ========================================== -->
+      <div class="minimap-container" id="minimap">
+        <div class="minimap-radar">
+          <div class="radar-grid"></div>
+
+          <!-- Simulated Vector Map Roads -->
+          <svg class="radar-roads" viewBox="0 0 200 150" preserveAspectRatio="none">
+            <line x1="0" y1="40" x2="200" y2="130" stroke="#334155" stroke-width="12" stroke-linecap="round"/>
+            <line x1="0" y1="40" x2="200" y2="130" stroke="#64748b" stroke-width="8" stroke-linecap="round"/>
+            
+            <line x1="40" y1="150" x2="160" y2="0" stroke="#475569" stroke-width="7"/>
+            <line x1="100" y1="0" x2="100" y2="150" stroke="#334155" stroke-width="5"/>
+            <line x1="0" y1="90" x2="200" y2="70" stroke="#334155" stroke-width="5"/>
+
+            <!-- Current Waypoint Route Line (Vehicle Nav) -->
+            <path id="gpsRoute" d="M100,75 Q120,60 160,30" fill="none" stroke="#a855f7" stroke-width="4" stroke-linecap="round" stroke-dasharray="6,4" opacity="0.9"/>
+          </svg>
+
+          <!-- North Compass Indicator -->
+          <div class="radar-north">N</div>
+
+          <!-- Player Triangle Cursor -->
+          <div class="radar-player-blip"></div>
+
+          <!-- Street / Location Banner -->
+          <div class="minimap-location-tag">
+            <i class="fa-solid fa-location-arrow" style="color: #38bdf8; font-size: 9px; margin-right: 4px;"></i>
+            LEGION SQUARE, DOWNTOWN
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           HUD STYLES LAYER
+           ========================================== -->
+      <div class="hud-layer">
+
+        <!-- ----------------------------------------
+             STYLE 1: MINIMAL MODERN CIRCULAR
+             ---------------------------------------- -->
+        <div class="hud-style-1" id="style1">
+          <div class="s1-cluster">
+            <!-- Health -->
+            <div class="s1-ring-item">
+              <svg class="s1-ring-svg" viewBox="0 0 36 36">
+                <path class="s1-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="s1-ring-bar" stroke="var(--c-health)" stroke-dashoffset="15" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <i class="fa-solid fa-heart" style="color: var(--c-health);"></i>
+              <span class="ring-val" style="color: var(--c-health);">85%</span>
+            </div>
+
+            <!-- Armor -->
+            <div class="s1-ring-item">
+              <svg class="s1-ring-svg" viewBox="0 0 36 36">
+                <path class="s1-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="s1-ring-bar" stroke="var(--c-armor)" stroke-dashoffset="40" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <i class="fa-solid fa-shield-halved" style="color: var(--c-armor);"></i>
+              <span class="ring-val" style="color: var(--c-armor);">60%</span>
+            </div>
+
+            <!-- Hunger -->
+            <div class="s1-ring-item">
+              <svg class="s1-ring-svg" viewBox="0 0 36 36">
+                <path class="s1-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="s1-ring-bar" stroke="var(--c-hunger)" stroke-dashoffset="25" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <i class="fa-solid fa-burger" style="color: var(--c-hunger);"></i>
+              <span class="ring-val" style="color: var(--c-hunger);">75%</span>
+            </div>
+
+            <!-- Thirst -->
+            <div class="s1-ring-item">
+              <svg class="s1-ring-svg" viewBox="0 0 36 36">
+                <path class="s1-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="s1-ring-bar" stroke="var(--c-thirst)" stroke-dashoffset="10" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <i class="fa-solid fa-droplet" style="color: var(--c-thirst);"></i>
+              <span class="ring-val" style="color: var(--c-thirst);">90%</span>
+            </div>
+
+            <!-- Stamina -->
+            <div class="s1-ring-item">
+              <svg class="s1-ring-svg" viewBox="0 0 36 36">
+                <path class="s1-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="s1-ring-bar" stroke="var(--c-stamina)" stroke-dashoffset="5" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <i class="fa-solid fa-bolt" style="color: var(--c-stamina);"></i>
+              <span class="ring-val" style="color: var(--c-stamina);">95%</span>
+            </div>
+
+            <!-- Stress -->
+            <div class="s1-ring-item">
+              <svg class="s1-ring-svg" viewBox="0 0 36 36">
+                <path class="s1-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="s1-ring-bar" stroke="var(--c-stress)" stroke-dashoffset="80" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <i class="fa-solid fa-brain" style="color: var(--c-stress);"></i>
+              <span class="ring-val" style="color: var(--c-stress);">20%</span>
+            </div>
+
+            <!-- Voice Range -->
+            <div class="s1-ring-item">
+              <svg class="s1-ring-svg" viewBox="0 0 36 36">
+                <path class="s1-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="s1-ring-bar" stroke="var(--c-voice)" stroke-dashoffset="33" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <i class="fa-solid fa-microphone" style="color: var(--c-voice);"></i>
+              <span class="ring-val" style="color: var(--c-voice);">Normal</span>
+            </div>
+
+            <!-- Oxygen / Diving -->
+            <div class="s1-ring-item">
+              <svg class="s1-ring-svg" viewBox="0 0 36 36">
+                <path class="s1-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                <path class="s1-ring-bar" stroke="var(--c-oxygen)" stroke-dashoffset="0" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+              </svg>
+              <i class="fa-solid fa-lungs" style="color: var(--c-oxygen);"></i>
+              <span class="ring-val" style="color: var(--c-oxygen);">100%</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ----------------------------------------
+             STYLE 2: SLEEK TACTICAL BARS
+             ---------------------------------------- -->
+        <div class="hud-style-2" id="style2" style="display: none;">
+          <!-- Health -->
+          <div class="s2-bar-row">
+            <div class="s2-icon-wrap"><i class="fa-solid fa-heart" style="color: var(--c-health);"></i></div>
+            <div class="s2-bar-track">
+              <div class="s2-bar-fill" style="width: 85%; background: var(--c-health); color: var(--c-health);"></div>
+            </div>
+            <div class="s2-bar-val">85%</div>
+          </div>
+
+          <!-- Armor -->
+          <div class="s2-bar-row">
+            <div class="s2-icon-wrap"><i class="fa-solid fa-shield-halved" style="color: var(--c-armor);"></i></div>
+            <div class="s2-bar-track">
+              <div class="s2-bar-fill" style="width: 60%; background: var(--c-armor); color: var(--c-armor);"></div>
+            </div>
+            <div class="s2-bar-val">60%</div>
+          </div>
+
+          <!-- Hunger -->
+          <div class="s2-bar-row">
+            <div class="s2-icon-wrap"><i class="fa-solid fa-burger" style="color: var(--c-hunger);"></i></div>
+            <div class="s2-bar-track">
+              <div class="s2-bar-fill" style="width: 75%; background: var(--c-hunger); color: var(--c-hunger);"></div>
+            </div>
+            <div class="s2-bar-val">75%</div>
+          </div>
+
+          <!-- Thirst -->
+          <div class="s2-bar-row">
+            <div class="s2-icon-wrap"><i class="fa-solid fa-droplet" style="color: var(--c-thirst);"></i></div>
+            <div class="s2-bar-track">
+              <div class="s2-bar-fill" style="width: 90%; background: var(--c-thirst); color: var(--c-thirst);"></div>
+            </div>
+            <div class="s2-bar-val">90%</div>
+          </div>
+
+          <!-- Stamina -->
+          <div class="s2-bar-row">
+            <div class="s2-icon-wrap"><i class="fa-solid fa-bolt" style="color: var(--c-stamina);"></i></div>
+            <div class="s2-bar-track">
+              <div class="s2-bar-fill" style="width: 95%; background: var(--c-stamina); color: var(--c-stamina);"></div>
+            </div>
+            <div class="s2-bar-val">95%</div>
+          </div>
+
+          <!-- Voice Indicator -->
+          <div class="s2-bar-row">
+            <div class="s2-icon-wrap"><i class="fa-solid fa-microphone" style="color: var(--c-voice);"></i></div>
+            <div class="s2-bar-track">
+              <div class="s2-bar-fill" style="width: 66%; background: var(--c-voice); color: var(--c-voice);"></div>
+            </div>
+            <div class="s2-bar-val">MID</div>
+          </div>
+        </div>
+
+        <!-- ----------------------------------------
+             STYLE 3: COMPACT FLOATING PILL
+             ---------------------------------------- -->
+        <div class="hud-style-3" id="style3" style="display: none;">
+          <div class="s3-pill-item" style="color: var(--c-health);">
+            <i class="fa-solid fa-heart"></i>
+            <span>85</span>
+          </div>
+
+          <div class="s3-pill-item" style="color: var(--c-armor);">
+            <i class="fa-solid fa-shield-halved"></i>
+            <span>60</span>
+          </div>
+
+          <div class="s3-pill-divider"></div>
+
+          <div class="s3-pill-item" style="color: var(--c-hunger);">
+            <i class="fa-solid fa-burger"></i>
+            <span>75</span>
+          </div>
+
+          <div class="s3-pill-item" style="color: var(--c-thirst);">
+            <i class="fa-solid fa-droplet"></i>
+            <span>90</span>
+          </div>
+
+          <div class="s3-pill-divider"></div>
+
+          <div class="s3-pill-item" style="color: var(--c-stamina);">
+            <i class="fa-solid fa-bolt"></i>
+            <span>95%</span>
+          </div>
+
+          <div class="s3-pill-item" style="color: var(--c-voice);">
+            <i class="fa-solid fa-microphone"></i>
+            <span style="font-size: 11px;">NORM</span>
+          </div>
+        </div>
+
+        <!-- ----------------------------------------
+             IN-VEHICLE SPEEDOMETER & TELEMETRY
+             ---------------------------------------- -->
+        <div class="vehicle-hud-cluster" id="vehicleCluster">
+          <div class="speedo-main">
+            <div class="speedo-number" id="speedValue">112</div>
+            <div class="speedo-unit">KM/H</div>
+            <div class="speedo-gear">GEAR 4</div>
+            <div class="rpm-bar-wrap">
+              <div class="rpm-fill"></div>
+            </div>
+          </div>
+
+          <div class="vehicle-metrics">
+            <div class="metric-badge active-seatbelt">
+              <i class="fa-solid fa-user-shield"></i>
+              <span>BELT ON</span>
+            </div>
+            <div class="metric-badge fuel-level">
+              <i class="fa-solid fa-gas-pump"></i>
+              <span>FUEL 78%</span>
+            </div>
+            <div class="metric-badge engine-health">
+              <i class="fa-solid fa-wrench"></i>
+              <span>ENG 98%</span>
+            </div>
+            <div class="metric-badge" style="color: #ec4899;">
+              <i class="fa-solid fa-fire"></i>
+              <span>NOS 100%</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Safezone & Layout Guide Overlay -->
+      <div class="screen-guides" id="guidesOverlay">
+        <div class="guide-safezone">
+          <span class="guide-label" style="top: 6px; left: 6px;">SAFEZONE 90% BOUNDARY</span>
+          <span class="guide-label" style="bottom: 6px; left: 6px;">RADAR HUD ANCHOR POINT</span>
+          <span class="guide-label" style="bottom: 6px; right: 6px;">VEHICLE TELEMETRY ANCHOR</span>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Explanatory & Design Comparison Cards -->
+  <footer class="simulator-footer">
+    <div class="info-card">
+      <h3><i class="fa-solid fa-circle-notch" style="color: #38bdf8;"></i> สไตล์ 1: Circular Radial</h3>
+      <p>จัดวางวงแหวนสถานะ (Health, Armor, Hunger, Thirst, Stamina, Stress, Voice) ชิดข้างขวาของ MiniMap อย่างลงตัว สอดคล้องกับเส้นสายมุมล่างซ้าย ไม่บังทัศนวิสัยสายตากลางจอ</p>
+      <div class="tag-list">
+        <span class="info-tag">FPS Friendly</span>
+        <span class="info-tag">Modern SVG</span>
+        <span class="info-tag">Compact</span>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3><i class="fa-solid fa-bars-progress" style="color: #3b82f6;"></i> สไตล์ 2: Tactical Bars</h3>
+      <p>ดีไซน์แบบแท่งหลอดขนานกับ MiniMap ด้านขวา มองเห็นเปอร์เซ็นต์ค่าตัวเลขชัดเจน เหมาะกับเซิร์ฟเวอร์แนวสมจริงและ Tactical เน้นอ่านค่าง่ายในเสี้ยววินาที</p>
+      <div class="tag-list">
+        <span class="info-tag">High Readability</span>
+        <span class="info-tag">Exact %</span>
+        <span class="info-tag">Minimal Blur</span>
+      </div>
+    </div>
+
+    <div class="info-card">
+      <h3><i class="fa-solid fa-capsules" style="color: #a855f7;"></i> สไตล์ 3: Floating Pill</h3>
+      <p>แคปซูลกระจกโปร่งแสงลอยเหนือ MiniMap ใช้พื้นที่แนวตั้งต่ำที่สุด มองเห็นทิวทัศน์รอบตัวได้กว้างขวางที่สุด เหมาะกับผู้เล่นสายถ่ายรูปและสายขับรถกินลมชมวิว</p>
+      <div class="tag-list">
+        <span class="info-tag">Ultra Slim</span>
+        <span class="info-tag">Glassmorphism</span>
+        <span class="info-tag">Clean View</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    let currentStyle = 1;
+    let currentState = 'onfoot';
+    let currentScene = 'night';
+    let guidesEnabled = false;
+
+    function switchStyle(styleNum) {
+      currentStyle = styleNum;
+      document.querySelectorAll('.ctrl-btn').forEach(btn => {
+        if (btn.innerText.includes(`${styleNum}.`)) {
+          btn.classList.add('active');
+        } else if (btn.innerText.includes('1.') || btn.innerText.includes('2.') || btn.innerText.includes('3.')) {
+          btn.classList.remove('active');
+        }
+      });
+
+      document.getElementById('style1').style.display = styleNum === 1 ? 'flex' : 'none';
+      document.getElementById('style2').style.display = styleNum === 2 ? 'flex' : 'none';
+      document.getElementById('style3').style.display = styleNum === 3 ? 'flex' : 'none';
+    }
+
+    function setGameState(state) {
+      currentState = state;
+      const screen = document.getElementById('gameScreen');
+      const btnOnfoot = document.getElementById('btn-onfoot');
+      const btnVehicle = document.getElementById('btn-vehicle');
+      const crosshair = document.getElementById('crosshair');
+      const carHood = document.getElementById('carHood');
+
+      if (state === 'vehicle') {
+        screen.classList.add('is-vehicle');
+        btnVehicle.classList.add('active');
+        btnOnfoot.classList.remove('active');
+        crosshair.style.opacity = '0';
+        carHood.style.opacity = '0.9';
+        startSpeedoTick();
+      } else {
+        screen.classList.remove('is-vehicle');
+        btnOnfoot.classList.add('active');
+        btnVehicle.classList.remove('active');
+        crosshair.style.opacity = '1';
+        carHood.style.opacity = '0';
+        stopSpeedoTick();
+      }
+    }
+
+    function setScene(scene) {
+      currentScene = scene;
+      const btnNight = document.getElementById('btn-night');
+      const btnDay = document.getElementById('btn-day');
+      const skyRect = document.getElementById('skyRect');
+      const cityLights = document.getElementById('cityLights');
+      const mountains = document.getElementById('mountains');
+
+      if (scene === 'day') {
+        btnDay.classList.add('active');
+        btnNight.classList.remove('active');
+        skyRect.setAttribute('fill', 'url(#skySunset)');
+        cityLights.setAttribute('opacity', '0.2');
+        mountains.setAttribute('fill', '#1f132b');
+      } else {
+        btnNight.classList.add('active');
+        btnDay.classList.remove('active');
+        skyRect.setAttribute('fill', 'url(#skyNight)');
+        cityLights.setAttribute('opacity', '0.6');
+        mountains.setAttribute('fill', '#090d16');
+      }
+    }
+
+    function toggleGuides() {
+      guidesEnabled = !guidesEnabled;
+      const overlay = document.getElementById('guidesOverlay');
+      const btn = document.getElementById('btn-guides');
+      if (guidesEnabled) {
+        overlay.classList.add('visible');
+        btn.classList.add('active');
+      } else {
+        overlay.classList.remove('visible');
+        btn.classList.remove('active');
+      }
+    }
+
+    // Vehicle speedometer dynamic simulation
+    let speedTimer = null;
+    function startSpeedoTick() {
+      if (speedTimer) clearInterval(speedTimer);
+      const speedEl = document.getElementById('speedValue');
+      let baseSpeed = 112;
+      speedTimer = setInterval(() => {
+        let delta = Math.floor(Math.random() * 7) - 3;
+        baseSpeed = Math.max(80, Math.min(165, baseSpeed + delta));
+        speedEl.textContent = baseSpeed;
+      }, 350);
+    }
+
+    function stopSpeedoTick() {
+      if (speedTimer) {
+        clearInterval(speedTimer);
+        speedTimer = null;
+      }
+    }
+  </script>
+</body>
+</html>

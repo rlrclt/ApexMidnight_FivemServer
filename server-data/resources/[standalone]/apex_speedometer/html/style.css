@@ -1,0 +1,63 @@
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{background:transparent!important;overflow:hidden;width:100vw;height:100vh;font-family:"Rajdhani",sans-serif;color:#fff}
+#speedo-container{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);width:300px;transition:opacity .25s,transform .25s;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+#speedo-container.hidden{opacity:0;transform:translateX(-50%) translateY(20px);pointer-events:none}
+
+/* RPM segments */
+.rpm-wrap{position:relative}
+.rpm-segs{display:grid;grid-template-columns:repeat(30,1fr);gap:1.5px;padding:2px;background:transparent;border-radius:2px;transition:filter .1s}
+.seg{height:8px;background:rgba(255,255,255,.14);border-radius:1px}
+.seg.on{background:#3ddc2f;box-shadow:0 0 5px rgba(61,220,47,.7)}
+.seg.on.warn{background:#ffb300;box-shadow:0 0 5px rgba(255,179,0,.7)}
+.seg.on.red{background:#ff2a4b;box-shadow:0 0 6px rgba(255,42,75,.85)}
+
+/* Shift light flashing animation */
+.rpm-wrap.shift-flash .rpm-segs{animation:rpmStrobe .08s infinite alternate}
+.rpm-wrap.shift-flash .seg.red{background:#fff!important;box-shadow:0 0 12px #ff0055,0 0 20px #ff0055!important}
+@keyframes rpmStrobe{0%{filter:brightness(1)}100%{filter:brightness(1.8) drop-shadow(0 0 8px #ff0055)}}
+
+.rpm-scale{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:rgba(255,255,255,.55);padding:2px 2px 0}
+.rpm-scale .red{color:#ff4d6d}
+
+/* Speed + gear */
+.main{display:flex;align-items:center;justify-content:center;gap:18px;margin:2px 0 5px}
+.speed-col{display:flex;flex-direction:column;align-items:center}
+.unit{font-size:11px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.65)}
+.speed{font-family:"Orbitron",sans-serif;font-weight:900;font-size:44px;line-height:1;letter-spacing:1px;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.9)}
+.speed .dim{color:rgba(255,255,255,.28)}
+.speed .lit{color:#fff}
+.divider{width:1px;height:42px;background:rgba(255,255,255,.25)}
+
+.gear-col{display:flex;flex-direction:column;align-items:center;min-width:44px}
+.gear{font-family:"Orbitron",sans-serif;font-weight:900;font-size:38px;line-height:1;text-align:center;color:#ffd60a;text-shadow:0 0 10px rgba(255,214,10,.5),0 2px 4px rgba(0,0,0,.9)}
+.gear.reverse{color:#ff9500}
+.gear.neutral{color:#00e5ff;text-shadow:0 0 10px rgba(0,229,255,.5)}
+.trans-mode{font-size:9px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.5);margin-top:2px}
+.trans-mode.manual{color:#00e5ff;text-shadow:0 0 6px rgba(0,229,255,.7)}
+
+/* Seatbelt badge */
+.seatbelt-badge{display:flex;align-items:center;justify-content:center;margin-left:4px;transition:opacity .2s,color .2s}
+.seatbelt-badge.hidden{display:none!important}
+.seatbelt-badge.unbuckled{color:#ff3b30;filter:drop-shadow(0 0 5px rgba(255,59,48,.85));animation:beltBlink .6s infinite ease-in-out}
+.seatbelt-badge.buckled{color:rgba(255,255,255,.22);filter:none}
+@keyframes beltBlink{0%,100%{opacity:.2}50%{opacity:1}}
+
+/* Fuel / Engine */
+.bars{display:flex;gap:12px;padding:5px 0;border-top:1px solid rgba(255,255,255,.14);border-bottom:1px solid rgba(255,255,255,.14)}
+.bar-item{flex:1;display:flex;align-items:center;gap:5px}
+.lbl{font-size:10px;font-weight:700;color:rgba(255,255,255,.65);width:26px}
+.track{flex:1;height:3.5px;background:rgba(255,255,255,.18);border-radius:2px;overflow:hidden}
+.fill{height:100%;width:0;border-radius:2px;transition:width .2s}
+.fill.gas{background:#3ddc2f;box-shadow:0 0 4px rgba(61,220,47,.6)}
+.fill.fuel{background:#ff9f0a}
+.fill.eng{background:#19c8e8}
+.fill.low{background:#ff3b30}
+.pct{font-size:10px;font-weight:700;width:26px;text-align:right}
+
+/* Steering + RPM */
+.foot{display:flex;align-items:center;justify-content:center;gap:28px;margin-top:5px}
+.steer{display:flex;align-items:center;gap:6px}
+#wheel{transition:transform .06s linear;filter:drop-shadow(0 1px 2px #000)}
+.deg{font-family:"Orbitron",sans-serif;font-weight:700;font-size:12px;color:#ffd60a;min-width:34px}
+.rpm-num{font-family:"Orbitron",sans-serif;font-weight:700;font-size:13px}
+.rpm-num .rl{font-family:"Rajdhani",sans-serif;font-size:11px;color:rgba(255,255,255,.55);letter-spacing:1px;margin-right:3px}

@@ -1,0 +1,472 @@
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');@import url('https://fonts.cdnfonts.com/css/pricedown');@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Yantramanav:wght@100;300;400;500;700;900&display=swap');@import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Yantramanav:wght@100;300;400;500;700;900&display=swap');
+
+/* Menu */
+div#openmenu { display: none; position: absolute; width: 50%; top: 45%; left: 50%; transform: translate(-50%,-50%); }
+.brand-logo { width: 25%; } /* when using an svg all you need to change is the width and it will resize it */
+
+/* Menu tab & panel styles */
+.text-tabcolor { color: rgb(255, 255, 255)!important; }
+.bg-active-tab { background: rgb(23 23 23)!important; }
+.bg-panel { background: rgb(30 30 30)!important; }
+.q-tab-panels { border-top-right-radius: 12px!important; border-bottom-right-radius: 12px!important; } /* change all 12px for a different border radius (rounds edges of the menu) */
+.q-splitter__panel.q-splitter__before { border-top-left-radius: 12px!important; border-bottom-left-radius: 12px!important; } /* change all 12px for a different border radius (rounds edges of the menu) */
+.q-tabs--vertical.q-tabs--not-scrollable .q-tabs__content { border-top-left-radius: 12px!important; border-bottom-left-radius: 12px!important; } /* change all 12px for a different border radius (rounds edges of the menu) */
+
+/* Menu text styles */
+.text-h6 { color: rgb(255, 255, 255)!important; }
+.text-h7 { color: rgba(255, 255, 255, 0.8)!important; }
+
+/* Menu buttons & checkboxes & toggle switch icons styles */
+.text-textbutton { color: rgb(0, 0, 0)!important; }
+.bg-bgbutton { background: rgba(241, 229, 66, 0.651)!important; }
+.q-checkbox__inner { color: rgb(255 255 255 / 70%)!important; }
+.text-checkbox { color: rgba(241, 229, 66, 0.651)!important; }
+.q-checkbox__svg { color: rgb(0, 0, 0)!important; }
+.q-checkbox__inner--truthy .q-checkbox__bg { box-shadow: 0px 0px 3px 3px rgb(220 20 60 / 15%)!important; } /* if you want the checkboxes to have a glow/shadow */
+.text-toggleicons { color: rgb(0, 0, 0)!important; }
+
+/* Menu misc */
+hr { opacity: 0.1!important; } /* horizontal line that seperates sections */
+.q-mb-md { margin-bottom: 0px!important; } /* removes extra top padding */
+.q-mb-md-d { padding-left: 10px!important; padding-bottom: 10px!important;} /* keeps q-items aligned */
+.q-item { padding: 8px 0px!important; } /* keeps q-items aligned */
+.q-item__section--avatar { min-width: 40px!important } /* keeps q-items aligned */
+.q-item__section--side { padding-right: 0px!important; } /* keeps q-items aligned */
+.q-splitter--vertical>.q-splitter__separator { width: 0px!important; } /* keeps navigation tab panel seamless */
+div#q-loading-bar { display: none!important; } /* makes sure there's no ajax load from quasar */
+::-webkit-scrollbar { display: none!important; } /* makes sure there's no ugly scrollbar on menu*/
+
+/* Hud radial styles */
+.text-health { color: rgb(33, 171, 97)!important; }
+.text-stress { color: rgb(255, 0, 0)!important; }
+.text-nos { color: rgb(255, 72, 133)!important; }
+.text-cruise { color: rgb(255, 72, 133)!important; }
+.text-armed { color: rgb(255, 72, 133)!important; }
+.text-harness { color: rgb(182, 72, 255)!important; }
+.text-oxygen { color: rgb(138, 168, 189)!important; }
+.text-parachute { color: rgb(0, 0, 0)!important; }
+.text-dev { color: rgb(0, 0, 0)!important; }
+.text-gauge { color: rgb(255, 255, 255)!important; }
+
+#main-container {
+  width: 100%;
+  height: auto;
+}
+
+/* Money */
+#money-container {
+  position: absolute;
+  right: 2vw;
+  top: 5vh;
+  font-weight: 400;
+  font-size: 40px;
+}
+
+#sign, #bank {
+  font-family: 'Pricedown Bl', sans-serif;
+  text-align: right;
+  color: #00ac31;
+  text-shadow: -1px -1px 0 rgba(0,0,0, 0.7), 1px -1px 0 rgba(0,0,0, 0.7), -1px 1px 0 rgba(0,0,0, 0.7), 1px 1px 0 rgba(0,0,0, 0.7);
+}
+
+#plus {
+  font-size: 50px;
+  font-family: 'Pricedown Bl', sans-serif;
+  text-align: right;
+  color: #00ac31;
+  text-shadow: -1px -1px 0 rgba(0,0,0, 0.7), 1px -1px 0 rgba(0,0,0, 0.7), -1px 1px 0 rgba(0,0,0, 0.7), 1px 1px 0 rgba(0,0,0, 0.7);
+}
+
+#minus {
+  font-size: 50px;
+  font-family: 'Pricedown Bl', sans-serif;
+  text-align: right;
+  color: #ac0000;
+  text-shadow: -1px -1px 0 rgba(0,0,0, 0.7), 1px -1px 0 rgba(0,0,0, 0.7), -1px 1px 0 rgba(0,0,0, 0.7), 1px 1px 0 rgba(0,0,0, 0.7);
+}
+
+#money {
+  font-family: 'Pricedown Bl', sans-serif;
+  text-align: right;
+  color: #ffffff;
+  text-shadow: -1px -1px 0 rgba(0,0,0, 0.7), 1px -1px 0 rgba(0,0,0, 0.7), -1px 1px 0 rgba(0,0,0, 0.7), 1px 1px 0 rgba(0,0,0, 0.7);
+}
+
+/* ========================================================
+   PLAYER HUD - STYLE 3: COMPACT FLOATING PILL (GLASS MORPHISM)
+   Author: apexcoding FiveM NUI Team
+   CEF-safe, anti-aliased, responsive pill capsule
+   ======================================================== */
+
+:root {
+  /* ========================================================
+     ⚙️ ปรับแต่งตำแหน่งแกน X และ Y ของ HUD ได้ที่นี่:
+     --hud-x: แนวนอน (วัดจากซ้ายจอ ยิ่งมากยิ่งไปขวา เช่น 3vw, 5vw, 50px)
+     --hud-y: แนวตั้ง (วัดจากล่างจอ ยิ่งมากยิ่งลอยสูง เช่น 20vh, 22vh, 180px)
+     ======================================================== */
+  --hud-x: 1.0vw;
+  --hud-y: 2.8vh;
+}
+
+.floating-pill-hud,
+#playerHud,
+#playerhud {
+  position: absolute;
+  left: var(--hud-x) !important;
+  bottom: var(--hud-y) !important;
+  display: flex;
+  align-items: center;
+  z-index: 100;
+  pointer-events: none;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pill-capsule-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(10, 12, 16, 0.65) !important; /* สีดำลึกโปร่งแสง Minimal (Deep Obsidian) เข้ากับทุกฉาก */
+  backdrop-filter: none !important; /* ปิด blur เพื่อไม่ให้ CEF FiveM เกิดบั๊กสี่เหลี่ยมดำทะลุมุมมน */
+  -webkit-backdrop-filter: none !important;
+  padding: 4px 14px !important;
+  border-radius: 30px !important;
+  border: 1px solid rgba(255, 255, 255, 0.16) !important; /* เส้นขอบแก้วสีขาวบางเฉียบ ตัดกับพื้นหลังดำอย่างลงตัว */
+  box-shadow: none !important; /* ปิดเงาดำ ไม่ให้มีคราบฟุ้งล้นขอบ */
+  overflow: hidden !important; /* ล็อกสีพื้นหลังไม่ให้หลุดล้นขอบมน */
+  background-clip: padding-box !important; /* ตัดสีพื้นหลังแนบตามขอบด้านใน */
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pill-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px;
+  background: transparent !important;
+  border: none !important;
+  border-radius: 6px;
+  color: var(--pill-color, #e2e8f0);
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 4px rgba(0, 0, 0, 0.8);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.75));
+  transition: all 0.25s ease;
+}
+
+.pill-item:hover {
+  background: transparent;
+}
+
+.pill-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  text-shadow: 0 0 8px currentColor;
+}
+
+.pill-value {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 13.5px;
+  color: #f1f5f9;
+  letter-spacing: 0.3px;
+}
+
+.pill-divider {
+  width: 1px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.12);
+  margin: 0 2px;
+}
+
+/* Voice Indicator */
+.voice-pill {
+  transition: all 0.25s ease;
+}
+
+.voice-bars-indicator {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 13px;
+  padding-bottom: 1px;
+}
+
+.voice-bars-indicator .v-bar {
+  width: 2.5px;
+  border-radius: 1px;
+  background: rgba(255, 255, 255, 0.2);
+  transition: all 0.2s ease;
+}
+
+.voice-bars-indicator .v-bar:nth-child(1) { height: 6px; }
+.voice-bars-indicator .v-bar:nth-child(2) { height: 9px; }
+.voice-bars-indicator .v-bar:nth-child(3) { height: 13px; }
+
+.voice-bars-indicator .v-bar.active {
+  background: var(--pill-color, #38bdf8);
+  box-shadow: 0 0 6px var(--pill-color, #38bdf8);
+}
+
+.voice-text {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.5px;
+}
+
+.voice-pill.is-talking {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.35);
+}
+
+.voice-pill.is-talking.is-radio {
+  background: rgba(236, 72, 153, 0.15);
+  border-color: rgba(236, 72, 153, 0.4);
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.35);
+}
+
+/* Pulse Warning & Danger Animations */
+@keyframes pillPulseDanger {
+  0% { transform: scale(1); box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+  50% { transform: scale(1.05); box-shadow: 0 0 12px rgba(239, 68, 68, 0.6); background: rgba(239, 68, 68, 0.2); }
+  100% { transform: scale(1); box-shadow: 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+@keyframes pillPulseWarning {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04); background: rgba(245, 158, 11, 0.2); }
+  100% { transform: scale(1); }
+}
+
+.pulse-danger {
+  animation: pillPulseDanger 1.2s infinite ease-in-out;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+}
+
+.pulse-warning {
+  animation: pillPulseWarning 1.6s infinite ease-in-out;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.health-pill.is-dead {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: rgba(239, 68, 68, 0.6);
+}
+
+/* Supplementary / Equipment Pills */
+.armed-pill, .parachute-pill, .harness-pill, .cruise-pill, .dev-pill {
+  padding: 4px 7px;
+  color: #f8fafc;
+}
+
+/* Pill Transitions */
+.pill-fade-enter-active,
+.pill-fade-leave-active {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.pill-fade-enter-from,
+.pill-fade-leave-to {
+  opacity: 0;
+  transform: scale(0.85) translateY(4px);
+}
+
+.q-ml-xl {
+  margin-left: -22px!important;
+}
+
+/* Vehicle HUD */
+
+speed:after {
+  content: "MPH"; /* If using KPH change this content from MPH */
+  display: block;
+  padding-top: 3px;
+  padding-left: 2px;
+  padding-right: 2px;
+  padding-bottom: 8px;
+  font-weight: 900;
+}
+
+altitude:after {
+  content: "ALT";
+  display: block;
+  padding-top: 10px;
+  padding-left: 2px;
+  padding-right: 2px;
+  font-weight: 900;
+}
+
+speed {
+  transform: rotate(150deg);
+  font-size: 2.4vh;
+  position: fixed; 
+  color: #fff; 
+  text-align: center;
+  font-weight: 600;
+  text-shadow: -1px -1px 0 rgba(0,0,0, 0.7), 1px -1px 0 rgba(0,0,0, 0.7), -1px 1px 0 rgba(0,0,0, 0.7), 1px 1px 0 rgba(0,0,0, 0.7); 
+}
+
+altitude {
+  transform: rotate(135deg);
+  font-size: 2.4vh;
+  position: fixed; 
+  color: #fff; 
+  text-align: center;
+  font-weight: 600;
+  text-shadow: -1px -1px 0 rgba(0,0,0, 0.7), 1px -1px 0 rgba(0,0,0, 0.7), -1px 1px 0 rgba(0,0,0, 0.7), 1px 1px 0 rgba(0,0,0, 0.7); 
+}
+
+.border {
+  bottom: 7.9%;
+  left: 1.3%;
+  width: 0%;
+  text-align: center;
+}
+
+.square {
+  bottom: 6.30%;
+  width: 29vh;
+  height: 18.5vh;
+  border: 4px solid #bababa;
+  position: absolute;
+  display: inline-block;
+}
+
+.circle {
+  bottom: 6.9%;
+  width: 27vh;
+  height: 22.9vh;
+  border: 4px solid #bababa;
+  position: absolute;
+  display: inline-block;
+  border-radius: 50%;
+}
+
+/* Animation */
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.8s cubic-bezier(1, 0.5, 0.8, 1);
+}
+
+.slide-fade-enter-from,
+.slide-fade-leave-to {
+  transform: translateX(20px);
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 2s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+/* Compass */
+.baseplate {
+  position: relative;
+  margin: 0 auto;
+  top: -0.8vh;
+	width: 150px;
+  height: auto;
+}
+
+.street-container {
+  position: relative;
+  top: 0.5vh;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.4vh;
+  letter-spacing: 0.7px;
+  text-decoration: none;
+  font-style: normal;
+  font-variant: small-caps;
+  text-transform: none;
+  font-weight: 800;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.street1 {
+  position: absolute;
+  margin: 0 auto;
+  right: 55%;
+  text-align: right!important;
+  color: rgb(255, 255, 255);
+}
+
+.street2 {
+  position: absolute;
+  margin: 0 auto;
+  left: 55%;
+  text-align: left!important;
+  color: rgb(255, 255, 255);
+}
+
+.pointer {
+  position: absolute;
+  margin: 0 auto;
+  top: -2%;
+  left: 0;
+  right: 0;
+  font-family: 'Yantramanav', sans-serif;
+  color: rgb(255, 255, 255);
+  font-size: 2.2vh;
+  text-align: center;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+  z-index: 9999;
+}
+
+.degrees {
+  position: absolute;
+  margin: 0 auto;
+  top: 80%;
+  left: 0;
+  right: 0;
+  opacity: 0.8;
+  font-family: 'Yantramanav', sans-serif;
+  color: rgb(255, 255, 255);
+  font-size: 1.5vh;
+  font-weight: 600;
+  text-align: center;
+  text-shadow: 0 0 1px rgb(0 0 0 / 60%), 0 0 1px rgb(0 0 0 / 60%), 0 0 1px rgb(0 0 0 / 60%), 0 0 1px rgb(0 0 0 / 60%);
+}
+
+.bezel {
+  position: relative;
+  width:100%;
+  height: 2vh;
+  font-family: 'Yantramanav', sans-serif;
+  font-size: 0.35vh;
+  font-weight: 700;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+}
+
+.bearing {
+  position: relative;
+  width:100%;
+  top: -0.5vh;
+  height: 3.5vh;
+  padding-left: 0.12vw;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 2.3vh;
+  letter-spacing: 0.7px;
+  text-decoration: none;
+  font-style: normal;
+  font-variant: small-caps;
+  text-transform: none;
+  font-weight: 600;
+  text-shadow: 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6), 0 0 1px rgba(0, 0, 0, 0.6);
+}

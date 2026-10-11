@@ -1,0 +1,330 @@
+# FiveM Quality Gates — Definition of Done (task mode)
+
+**Author:** Elias Araújo  
+**Part of:** [best-practices.md](best-practices.md) index (one skill: `fivem-development`)  
+**When to read:** Gate A (design plan), Implement (while coding), **before Gate V** (self-review loop).
+
+> **Audit vs quality-gates:** `/fxmind audit` is the **independent** post-hoc review. This file is the **author's checklist** while writing code. You cannot mark a check as pass without evidence in the diff.
+
+Theory lives in sibling files — this file only states **what to do** and **when**. Follow § links for details. The binding rule IDs (N1–N7, D1–D3, T1–T2, C1–C5) come from `.fxmind/policy/fivem-principles.md`; the tags below map each check to them.
+
+| Topic | File |
+|-------|------|
+| Tunnel, response budget, N+1 | [communication.md](communication.md) §1.1 |
+| Payload, cache, broadcast, audit E-a…E-g | [performance.md](performance.md) §1.4–§1.6, §2.1, §2.1.1 |
+| Monolith, globals | [architecture.md](architecture.md) §3.5–§3.6 |
+| Comments, anti-patterns, local-function extract | [style.md](style.md) §3.7, §3.10–**§3.11** |
+| SafeEvent, validation, auth | [security.md](security.md) §4.6–§4.8, §5.1–§5.3 |
+| cerberus exports | [api.md](api.md) |
+| NUI overlay fill, Vite hash | [fivem-react-nui/ui-guide.md](../fivem-react-nui/ui-guide.md) §2, §6 |
+
+---
+
+## Gate A — QUALITY plan (design review)
+
+When the task touches a FiveM resource, add a **QUALITY** block to Gate A (3–6 lines):
+
+```
+QUALITY:
+  endpoints: <new/changed names + type: event|Tunnel|NUI>
+  payload:   <estimated KB per response; list = metadata only>        (N2/N3)
+  cache:     <server cacheaside §2.1 | client §2.1.1 | none + why>   (D1)
+  validate:  <§5.3 checks per mutation>                                (C3/D3)
+  rate-limit:<SafeEvent on server | SetCooldown on client | both>      (N6)
+  fan-out:   <source | list | -1 small delta | cerberus | statebag>    (N1/N4/N5)
+  nui-fill:  <hex+gradient | png | n/a>   ← when diff touches NUI CSS/React overlay
+  vite-hash: <default | [hash] | fail>    ← when diff touches vite.config.ts
+```
+
+**Refactor tasks** also declare:
+
+```
+INVARIANTS: <behavior that must not change>
+```
+
+If you cannot fill a line, read the checklist below before editing.
+
+---
+
+## Checklist by artifact
+
+Apply **every row** that matches something you created or changed in the diff.
+
+### Endpoint (RegisterNetEvent, Tunnel `func.*`, NUI→server chain)
+
+| # | Check | Rule | Ref |
+|---|-------|------|-----|
+| E1 | Identity early | `source` + Passport/user_id before any work | §5.1 |
+| E2 | Rate-limit | Mutations + expensive reads: `SafeEvent` on server | §4.6 |
+| E3 | Input validation | Mutations: type/shape, whitelist keys, ranges, string cap **before** DB write | §5.3 |
+| E4 | Response size | List endpoints return **metadata only**; heavy fields (LONGTEXT, base64) on demand or batch | §1.6, E-f |
+| E5 | No N+1 | Client never loops server calls per list item; use batch `getDetails(ids[])` | §1.4, E-g |
+| E6 | Cache | Repeated per-user reads → `cacheaside` (§2.1); UI re-reads → client cache (§2.1.1) | §2.1, §2.1.1 |
+| E7 | Fan-out | Admin/UI → `source`; world small delta → `-1`; large → cerberus | §1.6.1 |
+| E8 | Admin class | `manager:*` / `admin:*` need **real** permission, not cooldown-only | §5.1 |
+
+### Sync / broadcast
+
+| # | Check | Rule | Ref |
+|---|-------|------|-----|
+| S1 | Target | Never `TriggerClientEvent("manager:*", -1, ...)` | §1.6.1 |
+| S2 | Large payload | cerberus `SendFullSync`/`SendDeltaSync` when ensured; otherwise chunks split once from the view cache + `Wait` | §2.2.1, §4.2 |
+| S3 | Pre-built | Send from view cache, not `build*(id, raw)` on hot path | §2.2 |
+| S4 | Bootstrap | Server push: start thread builds cache + seeds `-1`; player-loaded hook sends to `source`. **No** client `TriggerServerEvent("*:requestSync")` on start | §2.2.1 |
+| S5 | CRUD | Patch `Cache[id]` + `View[id]` only, send delta; no `Load*Cache()` / full resync | §2.2.1 |
+
+### DB write
+
+| # | Check | Rule | Ref |
+|---|-------|------|-----|
+| D1 | Validate first | No client string → SQL without §5.3 checks | §5.3 |
+| D2 | Invalidate cache | Same handler that writes also `Delete`/`Set` cacheaside key | §2.1 |
+| D3 | Async | No `executeSync` on hot paths; prefer `*_async` | performance |
+| D4 | Ownership | Mutations include `AND user_id = ?` (or equivalent) | §5.1 |
+
+### NUI callback
+
+| # | Check | Rule | Ref |
+|---|-------|------|-----|
+| N1 | Client cooldown | `SetCooldown` before `TriggerServerEvent` / Tunnel on mutating callbacks | §4.7 |
+| N2 | JSON response | `cb({})` or valid JSON — not bare `"ok"` string | ui-guide |
+| N3 | No trust | NUI `maxlength`/UI gates are not security; server validates | §5.3 |
+
+### NUI overlay / Vite (when diff touches NUI CSS, React shell, or `vite.config.ts`)
+
+| # | Check | Rule | Ref |
+|---|-------|------|-----|
+| U1 | Vite hash | Never fix `entryFileNames` / `chunkFileNames` / `assetFileNames` without `[hash]` | ui-guide §2 |
+| U2 | Opaque fill | Panel/shell/popup fill = hex + `linear-gradient(#111,#111)` — not `rgba` / `bg-*/70` on same rounded element over transparent html | ui-guide §6 |
+| U3 | Dim layer | Screen dim = sibling/`::before` inset-0 **without** `border-radius`; opacity on dim layer, not card | ui-guide §6 |
+| U4 | No fadeIn | Open/close overlay with `display: flex|none` — not jQuery `fadeIn`/`fadeOut` | ui-guide §6 |
+| U5 | Observed UI | Exercise affected interactions, inspect a fresh screenshot and console; CEF claims require in-game evidence. Missing runtime stays unverified | task-verify |
+| U6 | Border fallback | When background/border rendering fails with `solid`, try top/left `inset`, bottom/right `outset` on the affected element; preserve width/color, check cascade and verify in CEF | ui-guide §6 |
+
+### Refactor
+
+| # | Check | Rule | Ref |
+|---|-------|------|-----|
+| R1 | Invariants | Gate A `INVARIANTS` preserved unless INTENT says otherwise | task.md |
+| R2 | Small steps | One concern per commit-sized change; no drive-by refactors | task.md |
+| R3 | Twins | Same defect pattern elsewhere → fix or list in Gate V `TWINS:` | task-verify |
+| R4 | No scope creep | Do not "improve" unrelated files | failure-modes #11 |
+
+### Clean code (always)
+
+| # | Check | Rule | Ref |
+|---|-------|------|-----|
+| C1 | Monolith | Stay in `server.lua`/`client.lua` unless split is justified | §3.5 |
+| C2 | No noise | Comment only non-obvious rules — not every line | §3.7 |
+| C3 | No single-use helpers | Extract `local function` only if 2+ call sites; no thin event wrappers | §3.11, §1.3 |
+| C4 | Lookup tables | 3+ conditions → table lookup, not long if/elseif | §3.1 |
+| C5 | Dead code | Remove unused imports/bindings touched by the diff | §3.6 |
+| C6 | Minimal diff | Bugfix ≠ file rewrite; keep user-approved structure/async | §3.11 |
+| C7 | Constants | Extract for domain meaning, actual reuse or real configuration; keep obvious one-use literals inline | §3.12 |
+| C8 | Lexical locals | A local helper must be declared in a scope visible to every caller before that caller is defined. Use explicit forward declaration only for real cycles; never let a later `local function` turn an earlier call into a global lookup | §3.11 |
+
+---
+
+## Self-review loop (before Gate V)
+
+Run this on **your own diff** after Implement, before reading `task-verify.md`. Max **2** self-review cycles; then proceed to Gate V (fix remaining in verify if needed).
+
+### Step 1 — Enumerate artifacts
+
+List every artifact the diff touches:
+
+```text
+endpoints:  func.saveOutfit (Tunnel mutate), NUI save (chain)
+broadcast:  none
+db-writes:  INSERT wardrobe_presets
+nui:        RegisterNUICallback save
+nui-fill:   DominacaoShell — hex+gradient
+vite-hash:  default (no custom rollup output)
+refactor:   no | yes → INVARIANTS: ...
+```
+
+### Step 2 — Check each artifact
+
+For each row in the checklist above that applies, mark **pass** or **fail + file:line**. Use audit severity anchors mentally: missing SafeEvent on mutation = fail; oversized list response = fail; N+1 loop = fail.
+
+### Step 3 — Clean code pass
+
+Scan diff for C1–C8. Fail = fix before Gate V. For Lua, explicitly inspect every new/moved `local function` for callee → caller order and lexical visibility.
+
+### Step 4 — Fix or document
+
+- **Fix** every fail you can in ≤2 cycles.
+- **Cannot fix** (out of scope) → list in Gate V `REVIEW: ... fixed: [...] deferred: [...]`.
+
+### Gate V record
+
+Put the result in `fxmind_record_gate` V evidence `review` — not as a block in chat: endpoints checked, fixes/deferred items, principle IDs (`N1 N2 N6 D1 ok; N3 n/a`) and, on refactors, parity (`invariants preserved` or `changed: reason`).
+
+---
+
+## Worked examples (minimal)
+
+### Endpoint — WRONG vs CORRECT
+
+```lua
+-- WRONG: mutation, no SafeEvent, no validation, echoes client payload
+function func.saveOutfit(name, clothingData)
+    local user_id = vRP.Passport(source)
+    exports["oxmysql"]:insert_async("INSERT ...", { user_id, name, json.encode(clothingData.components) })
+    return true, { name = name, components = clothingData.components }
+end
+
+-- CORRECT: SafeEvent → validate → write → return sanitized
+function func.saveOutfit(name, clothingData)
+    local source = source
+    if exports["cerberus"]:SafeEvent(source, "wardrobe:saveOutfit", { time = 3, noBan = true }) then return false end
+    local user_id = vRP.Passport(source)
+    if not user_id then return false end
+    if type(name) ~= "string" or #name < 1 or #name > 32 then return false end
+    local clean = validateClothing(clothingData)  -- §5.3 whitelist + ranges
+    if not clean then return false end
+    -- INSERT clean ...
+end
+```
+
+### List response — WRONG vs CORRECT
+
+```lua
+-- WRONG: full components + props for every preset (~290 KB tunnel_res)
+return getPresets(user_id), maxSlots, baseSlots
+
+-- CORRECT: metadata list; detail on apply/select
+-- SELECT id, name, created_at  (no components/props in list)
+-- func.applyOutfit(id) or func.getPresetDetail(id) for heavy fields
+```
+
+### N+1 — WRONG vs CORRECT
+
+```lua
+-- WRONG client loop
+for _, preset in ipairs(presets) do
+    local shot = func.getScreenshot(preset.id)  -- N Tunnel calls
+end
+
+-- CORRECT: one batch + client cache §2.1.1
+local shots = func.getScreenshots(idsFrom(presets))
+-- cache in presetsCache; invalidate on CRUD only
+```
+
+### NUI overlay fill — WRONG vs CORRECT (CEF)
+
+```css
+/* WRONG: rgba fill on rounded shell — 3D world bleeds through for some players */
+.popup {
+  border-radius: 8px;
+  background: rgba(16, 16, 16, 0.85);
+}
+
+/* CORRECT: opaque hex + gradient; dim on ::before without radius */
+.overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: #000;
+  opacity: 0.7;
+}
+.popup {
+  border-radius: 8px;
+  background-color: #111111;
+  background-image: linear-gradient(#111111, #111111);
+}
+```
+
+```tsx
+// WRONG: Tailwind bg-black/70 on rounded shell
+<div className="rounded-xl bg-black/70">{children}</div>
+
+// CORRECT: absolute fill layer + content z-index
+<div className="relative rounded-xl overflow-hidden">
+  <div className="absolute inset-0 z-0 bg-[#111111] [background-image:linear-gradient(#111111,#111111)]" />
+  <div className="relative z-[3]">{children}</div>
+</div>
+```
+
+```typescript
+// WRONG: fixed bundle names — CEF cache serves stale CSS
+build: {
+  rollupOptions: {
+    output: {
+      entryFileNames: "assets/[name].js",
+      assetFileNames: "assets/[name].[ext]",
+    },
+  },
+}
+
+// CORRECT: Vite default (includes [hash]) — fxmanifest: "src/ui/build/**/*"
+build: { outDir: "../build", sourcemap: false },
+```
+
+### NUI callback — WRONG vs CORRECT
+
+```lua
+-- WRONG
+RegisterNUICallback("save", function(data, cb)
+    func.saveOutfit(data.name, getCurrentClothing())
+    cb("ok")
+end)
+
+-- CORRECT
+RegisterNUICallback("save", function(data, cb)
+    if exports["cerberus"]:SetCooldown("wardrobe:save", 2000) then cb({ success = false }); return end
+    local ok, result = func.saveOutfit(data.name, getCurrentClothing())
+    cb({ success = ok, preset = result })
+end)
+```
+
+### Refactor — parity
+
+```lua
+-- WRONG: refactor rename + "while here" add SafeEvent to unrelated endpoints
+-- CORRECT: one INTENT change; INVARIANTS: "apply still returns preset shape {id,name,components,props}"
+-- TWINS: grep same missing-SafeEvent pattern in sibling handlers — fix or list
+```
+
+### Single-use helpers — WRONG vs CORRECT (§3.11)
+
+```lua
+-- WRONG: extract process/is/build helpers used once; reorder the whole file
+-- CORRECT: inline unique logic in the thread/handler; extract only 2+ call sites
+-- CORRECT: bugfix = minimal diff; keep user-approved async/simple structure
+```
+
+---
+
+## Graph engineering (Gate B hook)
+
+Before Implement, load context for the task's domain:
+
+1. **`fxmind_query`** (~1500) on Gate A TOPICS.
+2. **Memories** from `.fxmind/memory/_index.md` matching TOPICS.
+3. **Corrections** from `.fxmind/corrections/` — categories map to skill files (`performance`, `security`, `communication`, `architecture`, `style`). Read entries whose domain matches the resource you touch.
+
+Promote a pitfall found in self-review → `fxmind_record_correction` at Gate C (category = matching skill file).
+
+---
+
+## Quick reference — fail = do not ship
+
+| Symptom in diff | Fix |
+|-----------------|-----|
+| New `func.*` mutation without `SafeEvent` | Add §4.6 at handler top |
+| Client loop calling server per item | Batch endpoint §1.4 |
+| List returns LONGTEXT/base64/json blobs | Metadata list §1.6 |
+| `executeSync` in handler called from UI | `*_async` + cache §2.1 |
+| Client re-fetches same data on every open | Client cache §2.1.1 |
+| `cb("ok")` in NUI | `cb({})` |
+| New `local function` with one call site | Inline in the handler/thread §3.11 |
+| Bugfix rewrote / reordered the whole file | Revert churn; keep user-approved patterns §3.11 |
+| Caller reaches a later `local function` declaration | Move callee before caller or use `local name` + later `name = function` only for a real cycle §3.11 |
+| Local helper declared in a narrower block than its caller | Move it to the nearest common lexical scope §3.11 |
+| Refactor changed behavior not in INTENT | Revert or update INTENT + PARITY |
+| `rgba` / `bg-*/70` fill on rounded NUI shell | Hex + `linear-gradient` + dim on sibling §6 |
+| Vite `entryFileNames` without `[hash]` | Remove custom names; use default `[hash]` output |
+| jQuery `fadeIn`/`fadeOut` on overlay | `display: flex|none` toggle |
+
+Router: [SKILL.md](SKILL.md) · Full audit: [audit-passes.md](audit-passes.md) §2.4–§2.5

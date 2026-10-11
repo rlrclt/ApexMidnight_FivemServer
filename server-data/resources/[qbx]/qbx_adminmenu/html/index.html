@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="th" style="background: transparent !important; background-color: transparent !important;">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ApexMidnight Admin Suite</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body style="background: transparent !important; background-color: transparent !important;">
+  <div id="admin-app" class="admin-container" style="display: none;">
+    <!-- SIDEBAR NAVIGATION -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="brand-info">
+          <h2>APEX ADMIN</h2>
+          <span>SUITE v2.0</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="players">
+          <i class="fa-solid fa-users"></i>
+          <span>จัดการผู้เล่น</span>
+        </button>
+        <button class="nav-item" data-tab="giveitems">
+          <i class="fa-solid fa-boxes-stacked"></i>
+          <span>เสกไอเทม (Give Items)</span>
+        </button>
+        <button class="nav-item" data-tab="vehicles">
+          <i class="fa-solid fa-car-side"></i>
+          <span>ยานพาหนะ</span>
+        </button>
+        <button class="nav-item" data-tab="admintools">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <span>เครื่องมือแอดมิน</span>
+        </button>
+        <button class="nav-item" data-tab="server">
+          <i class="fa-solid fa-cloud-sun"></i>
+          <span>สภาพอากาศ & เซิร์ฟเวอร์</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="server-badge">
+          <span class="pulse-dot"></span>
+          <span>ApexMidnight</span>
+        </div>
+        <button id="btn-close" class="btn-close-app" title="กด ESC หรือคลิกเพื่อปิด">
+          <i class="fa-solid fa-xmark"></i> ปิดเมนู (ESC)
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT VIEW -->
+    <main class="main-content">
+      <!-- TOP BAR -->
+      <header class="topbar">
+        <div class="page-title">
+          <h1 id="current-tab-title">👥 จัดการผู้เล่นออนไลน์</h1>
+          <p id="current-tab-desc">ส่องดู วาร์ป จัดการ และควบคุมผู้เล่นในเซิร์ฟเวอร์</p>
+        </div>
+        <div class="topbar-actions">
+          <div class="search-box" id="global-search-container">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="global-search-input" placeholder="ค้นหา...">
+          </div>
+          <button id="btn-top-close" class="btn-top-close" title="ปิดเมนู (ESC)">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: PLAYERS MANAGEMENT -->
+      <section id="tab-players" class="tab-pane active">
+        <div class="pane-header">
+          <div class="count-badge"><span id="player-count">0</span> ผู้เล่นออนไลน์</div>
+          <button class="btn-action-small" id="btn-refresh-players"><i class="fa-solid fa-rotate"></i> รีเฟรช</button>
+        </div>
+        <div class="players-grid" id="players-list">
+          <!-- Rendered via JS -->
+        </div>
+      </section>
+
+      <!-- TAB 2: GIVE ITEMS (MULTI-SELECT CART) -->
+      <section id="tab-giveitems" class="tab-pane">
+        <div class="giveitems-layout">
+          <!-- LEFT: ITEMS CATALOG -->
+          <div class="items-catalog">
+            <div class="catalog-filters">
+              <div class="category-pills" id="item-categories">
+                <button class="pill-btn active" data-cat="all">ทั้งหมด</button>
+                <button class="pill-btn" data-cat="weapons">อาวุธ</button>
+                <button class="pill-btn" data-cat="ammo">กระสุน</button>
+                <button class="pill-btn" data-cat="food">อาหาร/เครื่องดื่ม</button>
+                <button class="pill-btn" data-cat="medical">เวชภัณฑ์</button>
+                <button class="pill-btn" data-cat="tools">อุปกรณ์/ช่าง</button>
+                <button class="pill-btn" data-cat="general">ทั่วไป</button>
+              </div>
+            </div>
+
+            <div class="items-grid" id="items-catalog-grid">
+              <!-- Rendered via JS: Item Cards -->
+            </div>
+          </div>
+
+          <!-- RIGHT: SELECTED BASKET / CART -->
+          <div class="items-basket">
+            <div class="basket-header">
+              <h3><i class="fa-solid fa-cart-flatbed"></i> รายการที่จะเสก (<span id="cart-count">0</span>)</h3>
+              <button class="btn-text-danger" id="btn-clear-cart"><i class="fa-solid fa-trash-can"></i> ล้าง</button>
+            </div>
+
+            <!-- TARGET SELECTOR -->
+            <div class="target-selector">
+              <label for="target-player-select">ผู้เล่นที่จะได้รับไอเทม:</label>
+              <select id="target-player-select">
+                <option value="me">ตัวฉันเอง (Self)</option>
+                <!-- Populated via JS with online players -->
+              </select>
+            </div>
+
+            <!-- CART ITEMS LIST -->
+            <div class="basket-items-list" id="cart-items-list">
+              <div class="empty-cart-msg">
+                <i class="fa-solid fa-box-open"></i>
+                <p>คลิกเลือกไอเทมจากรายการทางซ้าย<br>เพื่อเพิ่มลงในรายการที่ต้องการเสก</p>
+              </div>
+            </div>
+
+            <!-- BASKET ACTION BUTTON -->
+            <div class="basket-footer">
+              <button class="btn-give-all" id="btn-submit-give">
+                <i class="fa-solid fa-paper-plane"></i> เสกไอเทมทั้งหมดในรายการ
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: VEHICLES -->
+      <section id="tab-vehicles" class="tab-pane">
+        <div class="quick-actions-bar">
+          <button class="card-btn-action" data-action="veh-fix"><i class="fa-solid fa-wrench"></i> ซ่อมรถทันที</button>
+          <button class="card-btn-action" data-action="veh-save"><i class="fa-solid fa-floppy-disk"></i> บันทึกเป็นเจ้าของรถ</button>
+          <button class="card-btn-action" data-action="veh-tune"><i class="fa-solid fa-sliders"></i> เปิดเมนูแต่งรถ</button>
+          <button class="card-btn-action danger" data-action="veh-dv"><i class="fa-solid fa-trash"></i> ลบรถคันนี้ (DV)</button>
+        </div>
+
+        <div class="card-section">
+          <h3><i class="fa-solid fa-car"></i> เสกรถด่วน (Spawn Vehicle)</h3>
+          <div class="spawn-veh-form">
+            <input type="text" id="veh-spawn-input" placeholder="พิมพ์ชื่อโมเดลรถ เช่น thrax, sultan, t20, zentorno...">
+            <button class="btn-primary" id="btn-spawn-veh"><i class="fa-solid fa-plus"></i> เสกรถ</button>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <h3><i class="fa-solid fa-id-card"></i> เปลี่ยนป้ายทะเบียน</h3>
+          <div class="spawn-veh-form">
+            <input type="text" id="veh-plate-input" maxlength="8" placeholder="พิมพ์ป้ายทะเบียนใหม่ (สูงสุด 8 ตัว)...">
+            <button class="btn-primary" id="btn-change-plate"><i class="fa-solid fa-check"></i> เปลี่ยนป้าย</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: ADMIN TOOLS -->
+      <section id="tab-admintools" class="tab-pane">
+        <div class="tools-grid">
+          <div class="tool-card" id="card-noclip" data-toggle="noclip">
+            <div class="tool-icon"><i class="fa-solid fa-ghost"></i></div>
+            <div class="tool-content">
+              <h4>โหมดผี / ทะลุตึก (NoClip)</h4>
+              <p>บินทะลุกำแพงและสำรวจเมืองอย่างอิสระ</p>
+            </div>
+            <div class="tool-status"><span class="toggle-pill">ปิด</span></div>
+          </div>
+
+          <div class="tool-card" id="card-godmode" data-toggle="godmode">
+            <div class="tool-icon"><i class="fa-solid fa-shield-virus"></i></div>
+            <div class="tool-content">
+              <h4>โหมดอมตะ (Godmode)</h4>
+              <p>ป้องกันความเสียหายทุกรูปแบบ เลือดไม่ลด</p>
+            </div>
+            <div class="tool-status"><span class="toggle-pill">ปิด</span></div>
+          </div>
+
+          <div class="tool-card" id="card-invisible" data-toggle="invisible">
+            <div class="tool-icon"><i class="fa-solid fa-eye-slash"></i></div>
+            <div class="tool-content">
+              <h4>ล่องหน (Invisible)</h4>
+              <p>ซ่อนตัวตน ผู้เล่นอื่นจะไม่เห็นตัวคุณ</p>
+            </div>
+            <div class="tool-status"><span class="toggle-pill">ปิด</span></div>
+          </div>
+
+          <div class="tool-card" id="card-names" data-toggle="names">
+            <div class="tool-icon"><i class="fa-solid fa-id-badge"></i></div>
+            <div class="tool-content">
+              <h4>แสดงชื่อบนหัว (Player Names)</h4>
+              <p>เปิด/ปิด การแสดงชื่อและไอดีลอยบนหัวผู้เล่น</p>
+            </div>
+            <div class="tool-status"><span class="toggle-pill">ปิด</span></div>
+          </div>
+
+          <div class="tool-card" id="card-blips" data-toggle="blips">
+            <div class="tool-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <div class="tool-content">
+              <h4>แสดงพิกัดบนแผนที่ (Blips)</h4>
+              <p>แสดงจุดตำแหน่งของผู้เล่นทุกคนบนเรดาร์</p>
+            </div>
+            <div class="tool-status"><span class="toggle-pill">ปิด</span></div>
+          </div>
+
+          <div class="tool-card" id="card-infiniteammo" data-toggle="infiniteammo">
+            <div class="tool-icon"><i class="fa-solid fa-infinity"></i></div>
+            <div class="tool-content">
+              <h4>กระสุนไม่จำกัด (Infinite Ammo)</h4>
+              <p>ยิงปืนได้ต่อเนื่องโดยกระสุนไม่มีวันหมด</p>
+            </div>
+            <div class="tool-status"><span class="toggle-pill">ปิด</span></div>
+          </div>
+
+          <div class="tool-card" id="card-revive" data-action="revive-self">
+            <div class="tool-icon"><i class="fa-solid fa-heart-pulse"></i></div>
+            <div class="tool-content">
+              <h4>ชุบชีวิตตัวเอง (Revive Self)</h4>
+              <p>ฟื้นฟูเลือดและเกราะให้เต็ม 100% ทันที</p>
+            </div>
+            <div class="tool-status"><button class="btn-mini">กดชุบ</button></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: SERVER & WEATHER -->
+      <section id="tab-server" class="tab-pane">
+        <div class="card-section">
+          <h3><i class="fa-solid fa-cloud"></i> ปรับสภาพอากาศเซิร์ฟเวอร์</h3>
+          <div class="weather-grid" id="weather-selector">
+            <button class="weather-btn" data-weather="EXTRASUNNY"><i class="fa-solid fa-sun"></i> แดดจัด</button>
+            <button class="weather-btn" data-weather="CLEAR"><i class="fa-solid fa-cloud-sun"></i> ท้องฟ้าโปร่ง</button>
+            <button class="weather-btn" data-weather="NEUTRAL"><i class="fa-solid fa-cloud"></i> ปกติ</button>
+            <button class="weather-btn" data-weather="OVERCAST"><i class="fa-solid fa-cloud-meatball"></i> เมฆครึ้ม</button>
+            <button class="weather-btn" data-weather="RAIN"><i class="fa-solid fa-cloud-showers-heavy"></i> ฝนตก</button>
+            <button class="weather-btn" data-weather="THUNDER"><i class="fa-solid fa-bolt"></i> พายุฝนฟ้าคะนอง</button>
+            <button class="weather-btn" data-weather="FOGGY"><i class="fa-solid fa-smog"></i> หมอกลงจัด</button>
+            <button class="weather-btn" data-weather="XMAS"><i class="fa-solid fa-snowflake"></i> คริสต์มาส</button>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <h3><i class="fa-solid fa-clock"></i> ปรับเวลาเซิร์ฟเวอร์</h3>
+          <div class="time-slider-wrap">
+            <input type="range" id="time-slider" min="0" max="23" value="12" step="1">
+            <div class="time-display"><span id="time-val">12</span>:00 น.</div>
+            <button class="btn-primary" id="btn-apply-time"><i class="fa-solid fa-check"></i> บันทึกเวลา</button>
+          </div>
+        </div>
+
+        <div class="card-section">
+          <h3><i class="fa-solid fa-bullhorn"></i> ประกาศข้อความทั้งเซิร์ฟเวอร์ (Announcement)</h3>
+          <div class="spawn-veh-form">
+            <input type="text" id="announce-input" placeholder="พิมพ์ข้อความที่ต้องการประกาศให้ผู้เล่นทุกคนเห็น...">
+            <button class="btn-primary" id="btn-send-announce"><i class="fa-solid fa-paper-plane"></i> ส่งประกาศ</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- PLAYER ACTIONS MODAL -->
+    <div class="modal-backdrop" id="player-modal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3 id="modal-player-title">จัดการผู้เล่น</h3>
+          <button class="modal-close-btn" id="btn-close-modal"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="modal-body">
+          <div class="player-info-banner" id="modal-player-info">
+            <!-- Rendered via JS -->
+          </div>
+          <div class="modal-actions-grid">
+            <button class="m-btn" data-paction="goto"><i class="fa-solid fa-location-arrow"></i> วาร์ปไปหา (Goto)</button>
+            <button class="m-btn" data-paction="bring"><i class="fa-solid fa-hand-holding-hand"></i> ดึงมาหา (Bring)</button>
+            <button class="m-btn" data-paction="revive"><i class="fa-solid fa-heart-pulse"></i> ชุบชีวิต (Revive)</button>
+            <button class="m-btn" data-paction="freeze"><i class="fa-solid fa-snowflake"></i> แช่แข็ง (Freeze)</button>
+            <button class="m-btn" data-paction="clothing"><i class="fa-solid fa-shirt"></i> เปิดเมนูแต่งตัว</button>
+            <button class="m-btn danger" data-paction="kill"><i class="fa-solid fa-skull"></i> สังหาร (Kill)</button>
+            <button class="m-btn danger" data-paction="kick"><i class="fa-solid fa-user-xmark"></i> เตะออกจากเซิร์ฟ (Kick)</button>
+            <button class="m-btn danger" data-paction="ban"><i class="fa-solid fa-ban"></i> แบน (Ban)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

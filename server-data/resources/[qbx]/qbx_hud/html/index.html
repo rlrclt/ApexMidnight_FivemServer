@@ -1,0 +1,409 @@
+<html>
+    <head>
+        <meta id="viewport" name="viewport" content ="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+        <link rel="stylesheet" type="text/css" href="styles.css"/>
+        <link rel="stylesheet" type="text/css" href="responsive.css"/>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Prompt:wght@400;500;600;700&family=Rajdhani:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+        <link href="https://cdn.jsdelivr.net/npm/quasar@2.1.0/dist/quasar.prod.css" rel="stylesheet" type="text/css"/>
+        <link href="https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900|Material+Icons" rel="stylesheet" type="text/css"/>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js" defer></script>
+        <script src="https://cdn.jsdelivr.net/npm/quasar@2.1.0/dist/quasar.umd.prod.js" defer></script>
+        <script src="app.js" defer></script>
+        <!-- FiveM In-Game Live CSS Hot-Reload (Dev Mode) -->
+        <script>
+            (function() {
+                let lastCssHash = '';
+                setInterval(() => {
+                    fetch('styles.css?nocache=' + Date.now())
+                        .then(r => r.text())
+                        .then(text => {
+                            if (!lastCssHash) {
+                                lastCssHash = text;
+                                return;
+                            }
+                            if (lastCssHash !== text) {
+                                lastCssHash = text;
+                                console.log('[Live NUI] styles.css changed! Applying live style...');
+                                let liveTag = document.getElementById('live-injected-css');
+                                if (!liveTag) {
+                                    liveTag = document.createElement('style');
+                                    liveTag.id = 'live-injected-css';
+                                    document.head.appendChild(liveTag);
+                                }
+                                liveTag.textContent = text;
+                            }
+                        })
+                        .catch(() => {});
+                }, 1000);
+            })();
+        </script>
+    </head>
+    <body>
+        <div id="baseplate-container" v-show="show">
+            <div v-if="showStreets" class="street-container">
+                <div class="street2">{{street2}}</div>
+                <div class="street1">{{street1}}</div>
+            </div>
+            <div class="baseplate" v-show="show">
+                <div v-if="showPointer" class="pointer">˅</div>
+                <div v-if="showDegrees" class="degrees"></div>
+                    <svg class="bezel">
+                        <rect width="3" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="20" x="-90"/>
+                        <rect width="3" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="9" x="-45"/>
+                        <rect width="4.5" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="20" x="0"/>
+                        <rect width="3" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="9" x="45"/>
+                        <rect width="4.5" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="20" x="90"/>
+                        <rect width="3" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="9" x="135"/>
+                        <rect width="4.5" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="20" x="180"/>
+                        <rect width="3" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="9" x="225"/>
+                        <rect width="4.5" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="20" x="270"/>
+                        <rect width="3" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="9" x="315"/>
+                        <rect width="4.5" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="20" x="360"/>
+                        <rect width="3" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="9" x="405"/>
+                        <rect width="3" stroke="black" fill="white" stroke-width="0.5" stroke-opacity="0.6" v-if="showCompass" height="20" x="450"/>
+                    </svg>
+            
+                    <svg class="bearing">
+                        <text v-if="showCompass" x="0" y="1.5" dominant-baseline="middle" text-anchor="middle" fill= "yellow">N</text>
+                        <text v-if="showCompass" x="360" y="1.5" dominant-baseline="middle" text-anchor="middle" fill= "yellow">N</text>
+                        <text style="font-size: 1.4vh!important; font-weight: 800!important;" v-if="showCompass" x="315" y="-11" dominant-baseline="middle" text-anchor="middle" fill="white">NW</text>
+                        <text style="font-size: 1.4vh!important; font-weight: 800!important;" v-if="showCompass" x="-45" y="-11" dominant-baseline="middle" text-anchor="middle" fill="white">NW</text>
+                        <text style="font-size: 1.4vh!important; font-weight: 800!important;" v-if="showCompass" x="45" y="-11" dominant-baseline="middle" text-anchor="middle" fill="white">NE</text>
+                        <text style="font-size: 1.4vh!important; font-weight: 800!important;" v-if="showCompass" x="405" y="-11" dominant-baseline="middle" text-anchor="middle" fill="white">NE</text>
+                        <text v-if="showCompass" x="90" y="1.5" dominant-baseline="middle" text-anchor="middle" fill="white">E</text>
+                        <text style="font-size: 1.4vh!important; font-weight: 800!important;" v-if="showCompass" x="135" y="-11" dominant-baseline="middle" text-anchor="middle" fill="white">SE</text>
+                        <text v-if="showCompass" x="180" y="1.5" dominant-baseline="middle" text-anchor="middle" fill="white">S</text>
+                        <text style="font-size: 1.4vh!important; font-weight: 800!important;" v-if="showCompass" x="225" y="-11" dominant-baseline="middle" text-anchor="middle" fill="white">SW</text>
+                        <text v-if="showCompass" x="270" y="1.5" dominant-baseline="middle" text-anchor="middle" fill="white">W</text>
+                    </svg>
+                </div>
+            </div>
+        <div id="openmenu">
+            <div id="menu">
+                <q-splitter v-model="splitterModel" style="height: 50vh;">
+                    <template v-slot:before>
+                        <q-tabs v-model="tab" active-bg-color="active-tab" inline-label indicator-color="transparent" vertical class="text-tabcolor bg-panel">
+                            <q-tab name="hud" icon="view_list" label="HUD" style="height: 5.5vh; padding-left: 1vh; justify-content: end;"></q-tab>
+                        </q-tabs>
+                    </template>
+                    <template v-slot:after>
+                        <q-tab-panels v-model="tab" animated swipeable vertical transition-prev="jump-up" transition-next="jump-up" class="bg-active-tab">
+                            <q-tab-panel name="hud">
+                                <div class="q-mb-md">
+                                    <div class="text-h6 q-mb-md">รีเซ็ตการแสดงผล HUD <img class="brand-logo" align="right" src="./brand-logo.svg"></img></div>
+                                    <div class="q-pa-md q-gutter-sm">
+                                        <q-btn v-on:click="resetStorage($event)" :loading="progress[0].loading" :percentage="progress[0].percentage" text-color="textbutton" color="bgbutton" @click="startComputing(0)" style="width: 170px"> คืนค่าเริ่มต้น (Reset)
+                                        <template v-slot:loading> <q-spinner-gears class="on-left"></q-spinner-gears> กำลังรีเซ็ต... </template></q-btn>
+                                        <div class="text-h7 q-mb-md">หากต้องการรีเซ็ตการตั้งค่าทั้งหมดกลับเป็นค่าเริ่มต้น ให้คลิกปุ่มนี้ <br> (คุณจะต้องเข้าเกมใหม่อีกครั้งเพื่อให้การรีเซ็ตมีผลสมบูรณ์)</div>
+                                        <q-btn v-on:click="restartHud($event)" :loading="progress[1].loading" :percentage="progress[1].percentage" text-color="textbutton" color="bgbutton" @click="startComputing(1)" style="width: 170px"> รีสตาร์ท HUD
+                                        <template v-slot:loading> <q-spinner-gears class="on-left"></q-spinner-gears> กำลังรีสตาร์ท... </template></q-btn>
+                                        <div class="text-h7 q-mb-md">หากหน้าจอ HUD แสดงผลผิดปกติ ให้กดปุ่มนี้เพื่อรีสตาร์ท หรือพิมพ์คำสั่ง /resethud ในแชท</div>
+                                    </div>
+                                    <hr>
+                                    <div class="text-h6 q-mb-md">ตัวเลือกการแสดงผล (Options)</div>
+                                    <div class="text-h7">
+                                        <q-item borderless tag="label" v-ripple>
+                                            <q-item-section avatar>
+                                                <q-checkbox v-model="isOutMapChecked" v-on:click="showOutMap($event)" color="checkbox" val="1"></q-checkbox>
+                                            </q-item-section>
+                                            <q-item-section>
+                                                <q-item-label>แสดงมินิแมพเฉพาะตอนอยู่ในรถ</q-item-label>
+                                                <q-item-label class="text-h7" caption>หากปิดตัวเลือกนี้ มินิแมพจะแสดงบนหน้าจอตลอดเวลาแม้จะเดินเท้า</q-item-label>
+                                            </q-item-section>
+                                        </q-item>
+                                        <q-item borderless tag="label" v-ripple>
+                                            <q-item-section avatar>
+                                                <q-checkbox v-model="isOutCompassChecked" v-on:click="showOutCompass($event)" color="checkbox" val="2"></q-checkbox>
+                                            </q-item-section>
+                                            <q-item-section>
+                                                <q-item-label>แสดงเข็มทิศเฉพาะตอนอยู่ในรถ</q-item-label>
+                                                <q-item-label class="text-h7" caption>หากปิดตัวเลือกนี้ แถบเข็มทิศจะแสดงบนหน้าจอตลอดเวลา</q-item-label>
+                                            </q-item-section>
+                                        </q-item>
+                                        <q-item borderless tag="label" v-ripple>
+                                            <q-item-section avatar>
+                                                <q-checkbox v-model="isCompassFollowChecked" v-on:click="showFollowCompass($event)" color="checkbox" val="3"></q-checkbox>
+                                            </q-item-section>
+                                            <q-item-section>
+                                                <q-item-label>เข็มทิศหมุนตามมุมมองกล้อง</q-item-label>
+                                                <q-item-label class="text-h7" caption>หากปิดตัวเลือกนี้ แถบเข็มทิศจะไม่หมุนตามการหันเมาส์ของผู้เล่น</q-item-label>
+                                            </q-item-section>
+                                        </q-item>
+                                    </div>
+                                    <hr>
+                                    <div class="text-h6 q-mb-md">การแจ้งเตือน (Notifications)</div>
+                                    <div class="text-h7">
+                                        <q-checkbox v-on:click="showMapNotif($event)" label='เปิดการแจ้งเตือนตำแหน่งบนแผนที่' v-model="isMapNotifChecked" color="checkbox" val="7" style="display: flex;"></q-checkbox>
+                                        <q-checkbox v-on:click="showFuelAlert($event)" label='เปิดการแจ้งเตือนเมื่อน้ำมันใกล้หมด' v-model="isLowFuelChecked" color="checkbox" val="8" style="display: flex;"></q-checkbox>
+                                        <q-checkbox v-on:click="showCinematicNotif($event)" label='เปิดการแจ้งเตือนเมื่อเข้าโหมดภาพยนตร์' v-model="isCinematicNotifChecked" color="checkbox" val="9" style="display: flex;"></q-checkbox>
+                                    </div>
+                                </div>                        
+                                <hr>
+                                <div class="text-h6 q-mb-md">สถานะผู้เล่น (Status)</div>
+                                <div class="text-h7">
+                                    <q-checkbox v-on:click="dynamicHealth($event)" label='แสดงเลือดตลอดเวลา' v-model="isDynamicHealthChecked" color="checkbox" val="10" style="display: flex;"></q-checkbox>
+                                    <q-checkbox v-on:click="dynamicArmor($event)" label='แสดงเกราะตลอดเวลา' v-model="isDynamicArmorChecked" color="checkbox" val="11" style="display: flex;"></q-checkbox>
+                                    <q-checkbox v-on:click="dynamicHunger($event)" label='แสดงความหิวตลอดเวลา' v-model="isDynamicHungerChecked" color="checkbox" val="12" style="display: flex;"></q-checkbox>
+                                    <q-checkbox v-on:click="dynamicThirst($event)" label='แสดงความกระหายน้ำตลอดเวลา' v-model="isDynamicThirstChecked" color="checkbox" val="13" style="display: flex;"></q-checkbox>
+                                    <q-checkbox v-on:click="dynamicStress($event)" label='แสดงความเครียดตลอดเวลา' v-model="isDynamicStressChecked" color="checkbox" val="14" style="display: flex;"></q-checkbox>
+                                    <q-checkbox v-on:click="dynamicOxygen($event)" label='แสดงออกซิเจน/พลังกายตลอดเวลา' v-model="isDynamicOxygenChecked" color="checkbox" val="15" style="display: flex;"></q-checkbox>
+                                </div>
+                                <hr>
+                                <div class="text-h6 q-mb-md">ยานพาหนะ (Vehicle)</div>
+                                <div class="text-h7">
+                                    <q-toggle v-on:click="changeFPS($event)" size="lg" keep-color icon-color="toggleicons" color="checkbox" :label="`เฟรมเรตมาตรวัดความเร็ว (${isChangeFPSChecked})`" unchecked-icon="60fps" false-value="Synced" true-value="Optimized" checked-icon="30fps" v-model="isChangeFPSChecked"></q-toggle>
+                                    <div class="text-h7 q-mb-md-d">โหมด Synced จะซิงค์ความเร็วตามจริง 60 FPS (กินสเปกขึ้นเล็กน้อย) ส่วนโหมด Optimized จะจำกัดที่ 30 FPS เพื่อประหยัดทรัพยากร</div>
+                                    <q-toggle v-on:click="ToggleMapShape($event)" size="lg" keep-color icon-color="toggleicons" color="checkbox" :label="`รูปทรงมินิแมพ (${isToggleMapShapeChecked == 'circle' ? 'ทรงกลม' : 'สี่เหลี่ยม'})`" unchecked-icon="radio_button_unchecked" false-value="circle" true-value="square" checked-icon="check_box_outline_blank" v-model="isToggleMapShapeChecked"></q-toggle>
+                                    <div class="text-h7 q-mb-md-d">คุณสามารถเลือกปรับรูปทรงของมินิแมพได้ตามใจชอบ ไม่ว่าจะเป็นทรงกลมหรือสี่เหลี่ยม</div>
+                                    <q-checkbox v-on:click="HideMap($event)" label='เปิดใช้งานมินิแมพ' v-model="isHideMapChecked" color="checkbox" val="15" style="display: flex;"></q-checkbox>
+                                    <q-checkbox v-on:click="ToggleMapBorders($event)" label='แสดงเส้นขอบมินิแมพ' v-model="isToggleMapBordersChecked" color="checkbox" val="16" style="display: flex;"></q-checkbox>
+                                    <q-checkbox v-on:click="dynamicEngine($event)" label='แสดงสถานะเครื่องยนต์ตลอดเวลา' v-model="isDynamicEngineChecked" color="checkbox" val="17" style="display: flex;"></q-checkbox>
+                                    <q-checkbox v-on:click="dynamicNitro($event)" label='แสดงสถานะไนตรัสตลอดเวลา' v-model="isDynamicNitroChecked" color="checkbox" val="18" style="display: flex;"></q-checkbox>
+                                </div>
+                                <hr>
+                                <div class="text-h6 q-mb-md">เข็มทิศและตำแหน่งถนน (Compass)</div>
+                                <div class="text-h7">
+                                    <q-toggle v-on:click="changeCompassFPS($event)" size="lg" keep-color icon-color="toggleicons" color="checkbox" :label="`เฟรมเรตเข็มทิศ (${isChangeCompassFPSChecked})`" unchecked-icon="60fps" false-value="Synced" true-value="Optimized" checked-icon="30fps" v-model="isChangeCompassFPSChecked"></q-toggle>
+                                    <div class="text-h7 q-mb-md-d">โหมด Synced จะหมุนตามจริง 60 FPS ส่วนโหมด Optimized จะจำกัดที่ 30 FPS เพื่อลดภาระเครื่อง</div>
+                                    <q-item borderless tag="label" v-ripple>
+                                        <q-item-section avatar>
+                                            <q-checkbox v-on:click="showCompassBase($event)" v-model="isShowCompassChecked" color="checkbox" val="19"></q-checkbox>
+                                        </q-item-section>
+                                        <q-item-section >
+                                            <q-item-label>เปิดใช้งานแถบเข็มทิศ</q-item-label>
+                                            <q-item-label class="text-h7" caption>หากปิดตัวเลือกนี้ แถบเข็มทิศจะไม่แสดงบนหน้าจอ</q-item-label>
+                                        </q-item-section>
+                                    </q-item>
+                                    <q-item borderless tag="label" v-ripple>
+                                        <q-item-section avatar>
+                                            <q-checkbox v-on:click="showStreetsNames($event)" v-model="isShowStreetsChecked" color="checkbox" val="20"></q-checkbox>
+                                        </q-item-section>
+                                        <q-item-section>
+                                            <q-item-label>แสดงชื่อถนนและสถานที่</q-item-label>
+                                            <q-item-label class="text-h7" caption>หากปิดตัวเลือกนี้ จะมองไม่เห็นชื่อถนนและพิกัดสถานที่ในเมือง</q-item-label>
+                                        </q-item-section>
+                                    </q-item>
+                                    <q-item borderless tag="label" v-ripple>
+                                        <q-item-section avatar>
+                                            <q-checkbox v-on:click="showPointerIndex($event)" v-model="isPointerShowChecked" color="checkbox" val="21"></q-checkbox>
+                                        </q-item-section>
+                                        <q-item-section>
+                                            <q-item-label>แสดงลูกศรชี้ทิศทางหลัก</q-item-label>
+                                            <q-item-label class="text-h7" caption>หากปิดตัวเลือกนี้ จะมองไม่เห็นลูกศรชี้ทิศเหนือ/ใต้/ออก/ตก</q-item-label>
+                                        </q-item-section>
+                                    </q-item>
+                                    <q-item borderless tag="label" v-ripple>
+                                        <q-item-section avatar>
+                                            <q-checkbox v-on:click="showDegreesNum($event)" v-model="isDegreesShowChecked" color="checkbox" val="22"></q-checkbox>
+                                        </q-item-section>
+                                        <q-item-section>
+                                            <q-item-label>แสดงตัวเลขมุมองศาเข็มทิศ</q-item-label>
+                                            <q-item-label class="text-h7" caption>หากปิดตัวเลือกนี้ จะมองไม่เห็นตัวเลขระบุมุมองศาแบบแม่นยำ</q-item-label>
+                                        </q-item-section>
+                                    </q-item>
+                                </div>
+                                <hr>
+                                <div class="text-h6 q-mb-md">โหมดภาพยนตร์ (Cinematic Mode)</div>
+                                <div class="text-h7">
+                                    <q-checkbox v-on:click="cinematicMode($event)" label='เปิดใช้งานโหมดภาพยนตร์ (ตัดขอบดำบน-ล่าง)' v-model="isCineamticModeChecked" color="checkbox" val="23" style="display: flex;"></q-checkbox>
+                                </div>
+                                <br>
+                            </q-tab-panel>
+                        </q-tab-panels>
+                    </template>
+                </q-splitter>
+            </div>
+        </div>
+        <div id="main-container">
+            <div id="money-container">
+                <div id="money-cash">
+                    <transition name="slide-fade">
+                        <p v-if="showCash"><span id="sign">$&nbsp;</span><span id="money">{{(cash)}}</span></p>
+                    </transition>
+                </div>
+                <div id="money-bank">
+                    <transition name="slide-fade">
+                        <p v-if="showBank"><span id="sign">$&nbsp;</span><span id="bank">{{(bank)}}</span></p>
+                    </transition>
+                </div>
+                <div id="money-change" v-if="showUpdate">
+                    <p v-if="plus" id="money"><span id="plus">+&nbsp;</span><span id="money">{{(amount)}}</span></p>
+                    <p v-else-if="minus" id="minus"><span id="minus">-&nbsp;</span><span id="money">{{(amount)}}</span></p>
+                </div>
+            </div>
+            <div id="ui-container">
+                <!-- FiveM Floating Pill HUD (Style 3 - Glassmorphism Capsule) -->
+                <div id="playerHud" class="floating-pill-hud" v-show="show">
+                    <div class="pill-capsule-bar">
+                        <!-- Voice Proximity Indicator -->
+                        <transition name="pill-fade">
+                            <div v-if="showVoice" class="pill-item voice-pill" :class="{ 'is-talking': talking, 'is-radio': radio > 0 }" :style="{ '--pill-color': talkingColor }">
+                                <div class="pill-icon-wrap">
+                                    <i class="fa-solid fa-microphone"></i>
+                                </div>
+                                <span class="pill-value">{{ voiceText }}</span>
+                            </div>
+                        </transition>
+
+                        <div class="pill-divider" v-if="showVoice && (showHealth || showArmor)"></div>
+
+                        <!-- Health (แสดงผลตลอดเวลา) -->
+                        <transition name="pill-fade">
+                            <div class="pill-item health-pill" :class="{ 'pulse-danger': isHealthLow, 'is-dead': playerDead }" :style="{ '--pill-color': healthColor }">
+                                <div class="pill-icon-wrap">
+                                    <i class="fa-solid fa-heart"></i>
+                                </div>
+                                <span class="pill-value">{{ roundedHealth }}</span>
+                            </div>
+                        </transition>
+
+                        <!-- Armor (แสดงผลตลอดเวลา) -->
+                        <transition name="pill-fade">
+                            <div class="pill-item armor-pill" :style="{ '--pill-color': armorColor }">
+                                <div class="pill-icon-wrap">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                                <span class="pill-value">{{ Math.round(armor || 0) }}</span>
+                            </div>
+                        </transition>
+
+                        <div class="pill-divider" v-if="(showHealth || showArmor) && (showHunger || showThirst)"></div>
+
+                        <!-- Hunger (แสดงผลตลอดเวลา) -->
+                        <transition name="pill-fade">
+                            <div class="pill-item hunger-pill" :class="{ 'pulse-warning': hunger <= 20 }" :style="{ '--pill-color': hungerColor }">
+                                <div class="pill-icon-wrap">
+                                    <i class="fa-solid fa-burger"></i>
+                                </div>
+                                <span class="pill-value">{{ Math.round(hunger || 0) }}</span>
+                            </div>
+                        </transition>
+
+                        <!-- Thirst (แสดงผลตลอดเวลา) -->
+                        <transition name="pill-fade">
+                            <div class="pill-item thirst-pill" :class="{ 'pulse-warning': thirst <= 20 }" :style="{ '--pill-color': thirstColor }">
+                                <div class="pill-icon-wrap">
+                                    <i class="fa-solid fa-droplet"></i>
+                                </div>
+                                <span class="pill-value">{{ Math.round(thirst || 0) }}</span>
+                            </div>
+                        </transition>
+
+                        <div class="pill-divider" v-if="(showHunger || showThirst) && (showOxygen || showStress)"></div>
+
+                        <!-- Stamina / Oxygen -->
+                        <transition name="pill-fade">
+                            <div v-if="showOxygen" class="pill-item stamina-pill" :style="{ '--pill-color': oxygenColor }">
+                                <div class="pill-icon-wrap">
+                                    <i :class="isUnderwater ? 'fa-solid fa-lungs' : 'fa-solid fa-bolt'"></i>
+                                </div>
+                                <span class="pill-value">{{ Math.round(oxygen || 0) }}%</span>
+                            </div>
+                        </transition>
+
+                        <!-- Stress -->
+                        <transition name="pill-fade">
+                            <div v-if="showStress" class="pill-item stress-pill" :class="{ 'pulse-warning': stress >= 70 }" :style="{ '--pill-color': stressColor }">
+                                <div class="pill-icon-wrap">
+                                    <i class="fa-solid fa-brain"></i>
+                                </div>
+                                <span class="pill-value">{{ Math.round(stress || 0) }}</span>
+                            </div>
+                        </transition>
+
+                        <!-- Extra / Vehicle / Equipment Badges -->
+                        <div class="pill-divider" v-if="hasExtraBadges"></div>
+
+                        <transition name="pill-fade">
+                            <div v-if="showArmed" class="pill-item armed-pill" title="Armed">
+                                <div class="pill-icon-wrap"><i class="fa-solid fa-crosshairs"></i></div>
+                            </div>
+                        </transition>
+
+                        <transition name="pill-fade">
+                            <div v-if="showParachute" class="pill-item parachute-pill" title="Parachute">
+                                <div class="pill-icon-wrap"><i class="fa-solid fa-parachute-box"></i></div>
+                            </div>
+                        </transition>
+
+                        <transition name="pill-fade">
+                            <div v-if="showHarness" class="pill-item harness-pill" title="Harness">
+                                <div class="pill-icon-wrap"><i class="fa-solid fa-user-shield"></i></div>
+                            </div>
+                        </transition>
+
+                        <transition name="pill-fade">
+                            <div v-if="showEngine && engine !== undefined && engine > 0" class="pill-item engine-pill" :style="{ '--pill-color': engineColor }" title="Engine Health">
+                                <div class="pill-icon-wrap"><i class="fa-solid fa-oil-can"></i></div>
+                                <span class="pill-value">{{ Math.round(engine || 0) }}%</span>
+                            </div>
+                        </transition>
+
+                        <transition name="pill-fade">
+                            <div v-if="showCruise" class="pill-item cruise-pill" title="Cruise Control">
+                                <div class="pill-icon-wrap"><i class="fa-solid fa-gauge-high"></i></div>
+                            </div>
+                        </transition>
+
+                        <transition name="pill-fade">
+                            <div v-if="showNos && nos !== undefined && nos > 0" class="pill-item nos-pill" :style="{ '--pill-color': nosColor }" title="Nitro">
+                                <div class="pill-icon-wrap"><i class="fa-solid fa-fire-flame-curved"></i></div>
+                                <span class="pill-value">{{ Math.round(nos || 0) }}%</span>
+                            </div>
+                        </transition>
+
+                        <transition name="pill-fade">
+                            <div v-if="showDev" class="pill-item dev-pill" title="Developer Mode">
+                                <div class="pill-icon-wrap"><i class="fa-solid fa-code"></i></div>
+                            </div>
+                        </transition>
+
+                        <!-- Custom Indicators Loop -->
+                        <transition-group name="pill-fade">
+                            <div v-for="indicator in visibleCustomIndicators" :key="indicator.id" class="pill-item custom-pill" :style="{ '--pill-color': indicator.color || '#38bdf8' }" :title="indicator.label">
+                                <div class="pill-icon-wrap"><i :class="indicator.icon || 'fa-solid fa-circle-dot'"></i></div>
+                                <span class="pill-value" v-if="indicator.value !== undefined">{{ Math.round(indicator.value) }}</span>
+                            </div>
+                        </transition-group>
+                    </div>
+                </div>
+            </div>
+            <div id="veh-container">
+                <div v-show="show">
+                    <div class="responsive" id="speedometer">
+                        <q-circular-progress class="q-ml-xl" style="transform: rotate(-150deg); opacity: 60%;" :value="speedometer" size="70px" :thickness="0.21" color="gauge" :min="0" :max="100"></q-circular-progress>
+                        <q-circular-progress class="q-ml-xl" style="transform: rotate(-150deg); left: -50%;" show-value :value="speed" size="70px" :thickness="0.21" color="gauge" :min="0" :max="600">
+                        <speed>{{(speed)}}</speed>
+                    </div>
+                    <div class="responsive" id="fuelgauge">
+                        <q-circular-progress class="q-ml-xl" style="transform: rotate(-125deg); opacity: 60%;" :value="fuelgauge" size="36px" :thickness="0.21" color="gauge" :min="0" :max="100"></q-circular-progress>
+                        <q-circular-progress class="q-ml-xl" style="transform: rotate(-125deg); left: -50%;" show-value :value="fuel" size="36px" :thickness="0.21" :style="{color: fuelColor}">
+                        <q-icon name="fas fa-gas-pump" style="transform: rotate(125deg);" size="14px" color="white"/>
+                    </div>
+                    <div class="responsive" id="altitudegauge" v-if="showAltitude">
+                        <q-circular-progress class="q-ml-xl" style="transform: rotate(-135deg); opacity: 60%;" :value="altitudegauge" size="70px" :thickness="0.21" color="gauge" :min="0" :max="100"></q-circular-progress>
+                        <q-circular-progress class="q-ml-xl" style="transform: rotate(-135deg); left: -50%;" show-value :value="altitude" size="70px" :thickness="0.21" color="gauge" :min="0" :max="750">
+                        <altitude>{{(altitude)}}</altitude>
+                    </div>
+                    <transition name="fade">
+                    <div class="responsive" id="seatbelt" v-if="showSeatbelt">
+                        <q-circular-progress class="q-ml-xl" style="transform: rotate(-125deg); opacity: 60%;" size="70px" :thickness="0.21" color="gauge" :min="0" :max="100"></q-circular-progress>
+                        <q-circular-progress class="q-ml-xl" style="transform: rotate(-125deg); left: -40%;" show-value size="70px" :thickness="0.21" color="gauge" :min="0" :max="750">
+                        <q-icon name="fas fa-user-slash" style="transform: rotate(125deg);" :value="seatbelt" size="21px" :style="{color: seatbeltColor}"/>
+                    </div>
+                    </transition>
+                    <div class="border">
+                        <div class="square" v-if="showSquare"></div>
+                    </div>
+                    <div class="border">
+                        <div class="circle" v-if="showCircle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="fonts.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="speedo-container" class="hidden">
+
+  <div class="rpm-wrap" id="rpm-wrap">
+    <div id="rpm-segs" class="rpm-segs"></div>
+    <div class="rpm-scale" id="rpm-scale"><span>0</span><span>2</span><span>4</span><span>6</span><span>8</span><span class="red">9K</span></div>
+  </div>
+
+  <div class="main">
+    <div class="speed-col">
+      <div class="unit">KM/H</div>
+      <div class="speed" id="speed"><span class="lit">0</span></div>
+    </div>
+    <div class="divider"></div>
+    <div class="gear-col">
+      <div class="gear" id="gear-val">N</div>
+      <div class="trans-mode" id="trans-mode">AUTO</div>
+    </div>
+    <div id="seatbelt-badge" class="seatbelt-badge hidden" title="Seatbelt">
+      <svg class="seatbelt-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="4" r="2.5" fill="currentColor"/>
+        <path d="M7 19l4-9h4l2 6"/>
+        <path d="M5 22h14"/>
+        <line x1="6" y1="6" x2="16" y2="19" stroke-width="2.5"/>
+      </svg>
+    </div>
+  </div>
+
+  <div class="bars">
+    <div class="bar-item"><span class="lbl">GAS</span><div class="track"><div id="gas-bar" class="fill gas"></div></div><span class="pct" id="gas-val">0%</span></div>
+    <div class="bar-item"><span class="lbl">FUEL</span><div class="track"><div id="fuel-bar" class="fill fuel"></div></div><span class="pct" id="fuel-val">0%</span></div>
+    <div class="bar-item"><span class="lbl">ENG</span><div class="track"><div id="eng-bar" class="fill eng"></div></div><span class="pct" id="eng-val">0%</span></div>
+  </div>
+
+  <div class="foot">
+    <div class="steer">
+      <svg id="wheel" viewBox="0 0 48 48" width="22" height="22" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round">
+        <circle cx="24" cy="24" r="19"/><circle cx="24" cy="24" r="4" fill="#fff"/>
+        <path d="M5 24h15M28 24h15M24 28v15"/>
+      </svg>
+      <span class="deg" id="steer-val">0°</span>
+    </div>
+    <div class="rpm-num"><span class="rl">RPM</span> <span id="rpm-text">0</span></div>
+  </div>
+
+</div>
+<script src="script.js"></script>
+</body>
+</html>
