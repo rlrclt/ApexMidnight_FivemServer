@@ -1,64 +1,64 @@
-local DEATH_STATE_STATE_BAG = 'deathState'
-local DEATH_STATE = {
-    ALIVE = 1,
-    LAST_STAND = 2,
-    DEAD = 3
-}
-
-local isDeathUiOpen = false
-local deathTimerMs = 300000 -- 5 นาที (Bleedout)
-local earlyRespawnTimerMs = 30000 -- 30 วินาที (Early Respawn)
-local deathStartMs = 0
+local DEATH_STATE_STATE_BAG = 'qbx_medical:deathState'
 local lastBumpTime = 0
 local isBumping = false
+local cursorActive = false
 
--- ฟังก์ชันเปิดหน้าจอ Next Death
-local function OpenNextDeathUI()
-    if isDeathUiOpen then return end
-    isDeathUiOpen = true
-    deathStartMs = GetGameTimer()
-
-    SendNUIMessage({
-        action = 'open',
-        allowEarly = true,
-        locale = 'th'
-    })
-
-    CreateThread(function()
-        while isDeathUiOpen do
-            local elapsed = GetGameTimer() - deathStartMs
-            local remainBleed = math.max(0, deathTimerMs - elapsed)
-            local remainEarly = math.max(0, earlyRespawnTimerMs - elapsed)
-
-            SendNUIMessage({
-                action = 'update',
-                remainBleed = remainBleed,
-                bleedoutMs = deathTimerMs,
-                remainEarly = remainEarly,
-                earlyMs = earlyRespawnTimerMs
-            })
-
-            Wait(1000)
-        end
-    end)
+-- ตรวจสอบว่าผู้เล่นอยู่ในสถานะตาย/หมดสติหรือไม่
+local function IsPlayerDownedOrDead()
+    local deathState = LocalPlayer.state[DEATH_STATE_STATE_BAG] or 1
+    if deathState == 2 or deathState == 3 then
+        return true
+    end
+    local ped = PlayerPedId()
+    if IsEntityDead(ped) or GetEntityHealth(ped) <= 0 then
+        return true
+    end
+    return false
 end
 
--- ฟังก์ชันปิดหน้าจอ Next Death
-local function CloseNextDeathUI()
-    if not isDeathUiOpen then return end
-    isDeathUiOpen = false
-    SendNUIMessage({
-        action = 'close'
-    })
+-- 1. ฟังก์ชันเกิดตำแหน่งเดิมที่ตาย (Respawn Here)
+local function DoRespawnHere()
+    local ped = PlayerPedId()
+    local coords = GetEntityCoords(ped)
+    local heading = GetEntityHeading(ped)
+
+    -- ปิด NUI ทันที
+    SendNUIMessage({ action = 'close' })
+    SetNuiFocus(false, false)
+    cursorActive = false
+
+    -- ชุบชีวิตและฟื้นฟูตัวละคร
+    NetworkResurrectLocalPlayer(coords.x, coords.y, coords.z, heading, true, false)
+    ClearPedTasksImmediately(ped)
+    SetEntityHealth(ped, 200)
+    SetEntityMaxHealth(ped, 200)
+    ClearPedBloodDamage(ped)
+    SetEntityInvincible(ped, false)
+    ResetPedMovementClipset(ped, 0.0)
+
+    -- อัปเดตสถานะ qbx_medical ให้กลับเป็นปกติ (ALIVE = 1)
+    LocalPlayer.state:set(DEATH_STATE_STATE_BAG, 1, true)
+    LocalPlayer.state:set('isDead', false, true)
+    LocalPlayer.state.invBusy = false
+
+    -- ยิง event ฟื้นคืนชีพ
+    TriggerEvent('qbx_medical:client:playerRevived')
+    TriggerServerEvent('next_death:server:respawnHere')
+
+    if exports.qbx_core then
+        exports.qbx_core:Notify('ฟื้นคืนชีพตรงตำแหน่งเดิมเรียบร้อยแล้ว!', 'success', 4000)
+    end
 end
 
--- ฟังก์ชันกระตุก/เด้งโมเดลศพ (Corpse Physics Bump & Resync)
+-- 2. ฟังก์ชันเด้งศพ (Corpse Physics Bump & Area Resync)
 local function DoCorpseBump()
     if isBumping then return end
     local curTime = GetGameTimer()
     if curTime - lastBumpTime < 5000 then
         local secWait = math.ceil((5000 - (curTime - lastBumpTime)) / 1000)
-        exports.qbx_core:Notify(('กรุณารออีก %d วินาที ก่อนเด้งศพอีกครั้ง'):format(secWait), 'error', 2000)
+        if exports.qbx_core then
+            exports.qbx_core:Notify(('กรุณารออีก %d วินาที ก่อนเด้งศพอีกครั้ง'):format(secWait), 'error', 2000)
+        end
         return
     end
 
@@ -68,32 +68,33 @@ local function DoCorpseBump()
     local ped = PlayerPedId()
     local coords = GetEntityCoords(ped)
 
-    -- 1. ตัด Task เดิมที่ล็อกตัวละครออก
+    -- 1. ตัดแอนิเมชันล็อกเดิมออก
     ClearPedTasksImmediately(ped)
 
-    -- 2. ยกพิกัดตัวละครลอยขึ้นจากพื้นเล็กน้อย เพื่อไม่ให้ติดพื้น/จมฟุตบาท
+    -- 2. ดึงตัวละครลอยขึ้นจากพื้น 35 ซม. แก้ปัญหาจมพื้นหรือติด Prop
     SetEntityCoords(ped, coords.x, coords.y, coords.z + 0.35, true, true, true, false)
 
-    -- 3. เปิด Ragdoll ฟิสิกส์และส่งแรงดีดโมเดลขึ้นด้านบน (ให้เห็นตัวละครเด้งจริง ๆ)
+    -- 3. เปิดระบบ Ragdoll และดีดแรงขึ้นในแนวแกน Z เพื่อให้เห็นโมเดลเด้งกระตุกจริง ๆ
     SetPedToRagdoll(ped, 1200, 1200, 0, false, false, false)
-    ApplyForceToEntityCenterOfMass(ped, 1, 0.0, 0.0, 3.8, true, true, true, true)
+    ApplyForceToEntityCenterOfMass(ped, 1, 0.0, 0.0, 4.2, true, true, true, true)
 
-    -- 4. ส่งบอก NUI ให้อัปเดตสถานะปุ่ม
+    -- 4. ส่งบอก NUI ให้ขึ้นสถานะ Cooldown
     SendNUIMessage({
         action = 'bumpTriggered',
         cooldown = 5
     })
 
-    -- 5. ส่งพิกัดบอก Server ซิงค์ให้หมอและผู้เล่นทุกคนในบริเวณรอบข้างเห็นโมเดลศพชัดเจน
+    -- 5. ส่งบอก Server ให้ซิงค์พิกัดศพกับหมอและผู้เล่นในบริเวณใกล้เคียง
     TriggerServerEvent('next_death:server:syncCorpse', coords)
 
-    exports.qbx_core:Notify('เด้งศพสำเร็จ! (รีเฟรชโมเดลและพิกัดให้หมอเห็นแล้ว)', 'success', 3500)
+    if exports.qbx_core then
+        exports.qbx_core:Notify('เด้งศพสำเร็จ! (รีเฟรชตำแหน่งให้หมอและคนรอบข้างเห็นศพแล้ว)', 'success', 3500)
+    end
 
-    -- 6. เมื่อโมเดลตกถึงพื้น ให้กลับเข้าสู่ท่าทางนอนตายอย่างสวยงาม
+    -- 6. เมื่อโมเดลตกลงสู่พื้น ให้กลับเข้าสู่ท่านอนตายอย่างเรียบร้อย
     CreateThread(function()
         Wait(1200)
-        local state = LocalPlayer.state.deathState
-        if state == DEATH_STATE.DEAD or state == DEATH_STATE.LAST_STAND or isDeathUiOpen then
+        if IsPlayerDownedOrDead() then
             RequestAnimDict('dead')
             local timeout = 0
             while not HasAnimDictLoaded('dead') and timeout < 50 do
@@ -106,96 +107,88 @@ local function DoCorpseBump()
     end)
 end
 
--- Key Mapping และ Command สำหรับปุ่ม B
-RegisterCommand('bumpcorpse', function()
-    if isDeathUiOpen then
-        DoCorpseBump()
+-- สลับเปิด/ปิด Mouse Cursor สำหรับคลิกปุ่มบนหน้าจอ NUI
+local function ToggleCursor()
+    cursorActive = not cursorActive
+    SetNuiFocus(cursorActive, cursorActive)
+    if exports.qbx_core then
+        exports.qbx_core:Notify(cursorActive ? 'เปิดเมาส์ (คลิกปุ่มบนหน้าจอได้แล้ว)' : 'ปิดเมาส์ (ควบคุมมุมกล้อง)', 'inform', 1500)
     end
-end, false)
-RegisterKeyMapping('bumpcorpse', 'เด้งศพเมื่อนอนตาย (Next Death)', 'keyboard', 'B')
+end
 
--- Loop ดักจับปุ่มกดบนคีย์บอร์ดในเกมโดยตรง (B, G, E, R)
+-- คำสั่งพิมพ์ใน Chat เผื่อกดปุ่มไม่ติด
+RegisterCommand('bump', DoCorpseBump, false)
+RegisterCommand('bumpcorpse', DoCorpseBump, false)
+RegisterCommand('respawnhere', DoRespawnHere, false)
+RegisterCommand('deathcursor', ToggleCursor, false)
+
+-- ลงทะเบียน Key Mapping สำหรับปุ่มคีย์บอร์ด
+RegisterKeyMapping('bumpcorpse', 'เด้งศพเมื่อนอนตาย', 'keyboard', 'B')
+RegisterKeyMapping('respawnhere', 'เกิดตำแหน่งเดิมเมื่อนอนตาย', 'keyboard', 'G')
+
+-- Main Thread: ดักจับปุ่มกด B, G, E, R และคลิกขวาตลอดเวลาที่ผู้เล่นนอนตาย
 CreateThread(function()
     while true do
-        local sleep = 350
-        if isDeathUiOpen then
+        local sleep = 250
+        if IsPlayerDownedOrDead() then
             sleep = 0
-            -- ปลดล็อกปุ่มจำเป็นให้ผู้เล่นกดและหมุนมุมกล้องได้
-            DisableAllControlActions(0)
+
+            -- ปลดล็อกการหมุนมุมกล้องและการแชท
             EnableControlAction(0, 1, true)   -- Look LR
             EnableControlAction(0, 2, true)   -- Look UD
             EnableControlAction(0, 245, true) -- Chat (T)
 
-            -- ปุ่ม B = เด้งศพ (Control 29)
+            -- ปุ่ม B = เด้งศพ (INPUT_SPECIAL_ABILITY_SECONDARY / 29)
             if IsDisabledControlJustPressed(0, 29) or IsControlJustPressed(0, 29) then
                 DoCorpseBump()
             end
 
-            -- ปุ่ม G = เกิดตำแหน่งเดิม (Control 47)
+            -- ปุ่ม G = เกิดตำแหน่งเดิม (INPUT_DETONATE / 47)
             if IsDisabledControlJustPressed(0, 47) or IsControlJustPressed(0, 47) then
-                CloseNextDeathUI()
-                TriggerServerEvent('next_death:server:respawnHere')
+                DoRespawnHere()
             end
 
-            -- ปุ่ม E = เรียกหมอ (Control 38)
+            -- ปุ่ม E = เรียกหมอ (INPUT_CONTEXT / 38)
             if IsDisabledControlJustPressed(0, 38) or IsControlJustPressed(0, 38) then
                 TriggerServerEvent('hospital:server:ambulanceAlert', 'มีประชาชนหมดสติ/ต้องการความช่วยเหลือด่วน')
                 SendNUIMessage({ action = 'called' })
-                exports.qbx_core:Notify('ส่งสัญญาณเรียกหน่วยกู้ชีพ (EMS) เรียบร้อยแล้ว', 'success', 4000)
+                if exports.qbx_core then
+                    exports.qbx_core:Notify('ส่งสัญญาณเรียกหน่วยกู้ชีพ (EMS) เรียบร้อยแล้ว', 'success', 4000)
+                end
             end
 
-            -- ปุ่ม R = เกิดโรงพยาบาล (Control 45)
-            if IsDisabledControlJustPressed(0, 45) or IsControlJustPressed(0, 45) then
-                local elapsed = GetGameTimer() - deathStartMs
-                if elapsed >= earlyRespawnTimerMs then
-                    CloseNextDeathUI()
-                    TriggerServerEvent('next_death:server:respawnHospital')
-                else
-                    local waitSec = math.ceil((earlyRespawnTimerMs - elapsed) / 1000)
-                    exports.qbx_core:Notify(('ต้องรออีก %d วินาทีจึงจะเกิดที่โรงพยาบาลได้'):format(waitSec), 'error', 3000)
-                end
+            -- กดคลิกขวา (Aim / 25) เพื่อสลับ Mouse Cursor ให้คลิกปุ่มบนหน้าจอได้
+            if IsDisabledControlJustPressed(0, 25) or IsControlJustPressed(0, 25) then
+                ToggleCursor()
+            end
+        else
+            if cursorActive then
+                SetNuiFocus(false, false)
+                cursorActive = false
             end
         end
         Wait(sleep)
     end
 end)
 
--- 1. NUI Callback: เรียกหมอ (Call EMS)
-RegisterNUICallback('callEMS', function(_, cb)
-    TriggerServerEvent('hospital:server:ambulanceAlert', 'มีประชาชนหมดสติ/ต้องการความช่วยเหลือด่วน')
-    SendNUIMessage({ action = 'called' })
-    exports.qbx_core:Notify('ส่งสัญญาณเรียกหน่วยกู้ชีพ (EMS) เรียบร้อยแล้ว', 'success', 5000)
-    cb('ok')
-end)
-
--- 2. NUI Callback: เกิดที่โรงพยาบาล (Respawn Hospital)
-RegisterNUICallback('respawn', function(_, cb)
-    local elapsed = GetGameTimer() - deathStartMs
-    if elapsed < earlyRespawnTimerMs then
-        local waitSec = math.ceil((earlyRespawnTimerMs - elapsed) / 1000)
-        exports.qbx_core:Notify(('ต้องรออีก %d วินาทีจึงจะเกิดที่โรงพยาบาลได้'):format(waitSec), 'error', 3000)
-        cb('not_ready')
-        return
-    end
-    CloseNextDeathUI()
-    TriggerServerEvent('next_death:server:respawnHospital')
-    cb('ok')
-end)
-
--- 3. NUI Callback: เกิดตำแหน่งเดิมที่ตาย (Respawn Here)
+-- NUI Callbacks เมื่อคลิกจากหน้าจอ
 RegisterNUICallback('respawnHere', function(_, cb)
-    CloseNextDeathUI()
-    TriggerServerEvent('next_death:server:respawnHere')
+    DoRespawnHere()
     cb('ok')
 end)
 
--- 4. NUI Callback: เด้งศพ (Sync/Bump Corpse จากการคลิก NUI)
 RegisterNUICallback('bumpCorpse', function(_, cb)
     DoCorpseBump()
     cb('ok')
 end)
 
--- Client Event รับคำสั่งให้รีเฟรชโมเดลของคนที่เด้งศพ (หมอและผู้เล่นใกล้เคียงจะเห็นศพทันที)
+RegisterNUICallback('closeCursor', function(_, cb)
+    SetNuiFocus(false, false)
+    cursorActive = false
+    cb('ok')
+end)
+
+-- ซิงค์ให้หมอและผู้เล่นใกล้เคียงเห็นโมเดลศพชัดเจนขึ้น
 RegisterNetEvent('next_death:client:onCorpseBumped', function(targetCoords, targetNetId)
     local myCoords = GetEntityCoords(PlayerPedId())
     local dist = #(myCoords - targetCoords)
@@ -213,25 +206,12 @@ RegisterNetEvent('next_death:client:onCorpseBumped', function(targetCoords, targ
     end
 end)
 
--- Event เมื่อผู้เล่นได้รับการชุบชีวิต
+-- ปิด NUI เมื่อได้รับการชุบชีวิต
 RegisterNetEvent('qbx_medical:client:playerRevived', function()
-    CloseNextDeathUI()
+    SendNUIMessage({ action = 'close' })
+    SetNuiFocus(false, false)
+    cursorActive = false
 end)
 
--- Event เมื่อผู้เล่นตาย
-RegisterNetEvent('qbx_medical:client:onPlayerDied', function()
-    OpenNextDeathUI()
-end)
-
--- ตรวจสอบ State Bag การตายของ qbx_medical
-AddStateBagChangeHandler(DEATH_STATE_STATE_BAG, ('player:%s'):format(GetPlayerServerId(PlayerId())), function(_, _, value)
-    if value == DEATH_STATE.DEAD or value == DEATH_STATE.LAST_STAND then
-        OpenNextDeathUI()
-    elseif value == DEATH_STATE.ALIVE then
-        CloseNextDeathUI()
-    end
-end)
-
-exports('OpenDeathUI', OpenNextDeathUI)
-exports('CloseDeathUI', CloseNextDeathUI)
 exports('DoCorpseBump', DoCorpseBump)
+exports('DoRespawnHere', DoRespawnHere)
